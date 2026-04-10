@@ -1,10 +1,12 @@
 #include <iostream>
 #include <conio.h>
 #include <fstream>
+#include <stdlib.h>
 #include <string>
 using namespace std;
 
-struct PLANTA{
+
+struct Planta {
 	int id;
 	string nombre;
 	string tipo;
@@ -12,22 +14,50 @@ struct PLANTA{
 	int precio;
 	int cantidad;
 
-}
+};
 
-struct USUARIO {
+struct Cliente {
 	int id;
 	string nombre;
+	string direccion;
 	int telefono;
-}
+};
 
-struct NODO {
-	int dato;
-	nodo* siguiente;
-}
+struct NodoPlanta {
+	Planta dato;
+	NodoPlanta* siguiente;
+};
+
+struct NodoCliente {
+	Cliente dato;
+	NodoCliente* siguiente;	
+};
+//Variables globales 
+NodoPlanta* cima = NULL; //PILA
+NodoCliente* frente = NULL; //COLA
+NodoCliente* fincola = NULL; //COLA
+
+//Prototipos de funciones
+void menuPrincipal();
+void PilaPlantas();
+void ColaClientes();
+//Funciones para la pila de plantas
+void ingresarPlanta();
+void verPlantas();
+void modificarPlanta();
+void buscarPlanta();
+void eliminarPlanta();
+//Funciones para la cola de clientes
+void ingresarCliente();
+void verClientes();
+void modificiarCliente();
+void buscarCliente();
+void eliminarCliente();
+
 
 void menuPrincipal() {
-	do{
 	int opcion;
+	do{
 	cout << "\nBIENVENIDO AL SISTEMA DE RAÍCES VERDES GT" << endl;
 	cout << "1. Menu de plantas (Pila)" << endl;
 	cout << "2. Menu de clientes (Cola)" << endl;
@@ -35,26 +65,18 @@ void menuPrincipal() {
 	cout << "Ingrese una opcion valida: "; cin >> opcion;
 	} while (opcion != 3);
 
-	switch{
+	switch(opcion){
 	case 1:
 		PilaPlantas();
 		break;
 	case 2:
-		ColaUsuarios();
+		ColaClientes();
 		break;
 	case 3:
 		break;
 	}
 
 	}
-
-void PilaPlantas() {
-	// Código para el menú de plantas (Pila)
-}
-
-void ColaUsuarios() {
-	// Código para el menú de usuarios (Cola)
-}
 
 
 int main() {
