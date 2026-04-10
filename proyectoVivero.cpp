@@ -4,8 +4,56 @@
 #include <string>
 using namespace std;
 
+struct PLANTA{
+	int id;
+	string nombre;
+	string tipo;
+	string color;
+	int precio;
+	int cantidad;
+
+}
+
+struct USUARIO {
+	int id;
+	string nombre;
+	int telefono;
+}
+
+struct NODO {
+	int dato;
+	nodo* siguiente;
+}
+
 void menuPrincipal() {
-	
+	do{
+	int opcion;
+	cout << "\nBIENVENIDO AL SISTEMA DE RAÍCES VERDES GT" << endl;
+	cout << "1. Menu de plantas (Pila)" << endl;
+	cout << "2. Menu de clientes (Cola)" << endl;
+	cout << "3. Salir" << endl;
+	cout << "Ingrese una opcion valida: "; cin >> opcion;
+	} while (opcion != 3);
+
+	switch{
+	case 1:
+		PilaPlantas();
+		break;
+	case 2:
+		ColaUsuarios();
+		break;
+	case 3:
+		break;
+	}
+
+	}
+
+void PilaPlantas() {
+	// Código para el menú de plantas (Pila)
+}
+
+void ColaUsuarios() {
+	// Código para el menú de usuarios (Cola)
 }
 
 
