@@ -28,119 +28,156 @@ struct NodoPlanta {
 	NodoPlanta* siguiente;
 };
 
-struct NodoCliente {
+struct NodoCliente {//Estructura de nodos para la cola
 	Cliente dato;
-<<<<<<< HEAD
-	NodoCliente* siguiente;	
-=======
 	NodoCliente* siguiente;
->>>>>>> ccda8aa (Modulo de filas)
 };
+
+//Struct para la controlar la cola (clientes)
+struct Cola {
+	int cantidad;//Opcional, para llevar el conteo de clientes en la cola
+	NodoCliente* frente;
+	NodoCliente* fincola;
+
+	//Iniciar la cola vacía
+	Cola() {
+		cantidad = 0;
+		frente = NULL;
+		fincola = NULL;
+	}
+};
+
 //Variables globales 
 NodoPlanta* cima = NULL; //PILA
-NodoCliente* frente = NULL; //COLA
-NodoCliente* fincola = NULL; //COLA
+Cola cola; //Cola global para manejar los clientes
+
 
 //Prototipos de funciones
 void menuPrincipal();
 void PilaPlantas();
 void ColaClientes();
+int menuConFlecha(string opcion[], int total, string encabezado);
+
 //Funciones para la pila de plantas
 void ingresarPlanta();
 void verPlantas();
 void modificarPlanta();
 void buscarPlanta();
 void eliminarPlanta();
-<<<<<<< HEAD
-=======
 NodoPlanta* buscarPlantaPorId(int id);
 
->>>>>>> ccda8aa (Modulo de filas)
 //Funciones para la cola de clientes
 void ingresarCliente();
 void verClientes();
 void modificiarCliente();
 void buscarCliente();
 void eliminarCliente();
-<<<<<<< HEAD
-=======
 NodoCliente* buscarClientePorId(int id);
-
 bool login(string nombre, string contra);
 void liberarPila();
 void liberarCola();
->>>>>>> ccda8aa (Modulo de filas)
 
+int menuConFlecha(string opciones[], int total, string encabezado) {
+	int seleccion = 0;
+	int tecla;
+
+	do {
+		system("cls");
+		cout << encabezado << endl;
+		cout <<"\t" << "\nUse Flecha Arriba, Flecha Abajo y Enter.\n\n";
+
+		for (int i = 0; i < total; i++) {
+			if (i == seleccion) {
+				cout << " -> " << opciones[i] << endl;
+			}
+			else {
+				cout << "    " << opciones[i] << endl;
+			}
+		}
+		tecla = _getch();
+
+		if (tecla == 0 || tecla == 224) {
+			tecla = _getch();
+			if (tecla == 72) {
+				seleccion--;
+				if (seleccion < 0) {
+					seleccion = total - 1;
+				}
+			}
+			else if (tecla == 80) {
+				seleccion++;
+				if (seleccion >= total) {
+					seleccion = 0;
+				}
+			}
+		}
+	} while (tecla != 13);
+	return seleccion + 1;
+}
 
 void menuPrincipal() {
 	int opcion;
-<<<<<<< HEAD
-	do{
-	cout << "\nBIENVENIDO AL SISTEMA DE RAÍCES VERDES GT" << endl;
-	cout << "1. Menu de plantas (Pila)" << endl;
-	cout << "2. Menu de clientes (Cola)" << endl;
-	cout << "3. Salir" << endl;
-	cout << "Ingrese una opcion valida: "; cin >> opcion;
-	} while (opcion != 3);
 
-	switch(opcion){
-	case 1:
-		PilaPlantas();
-		break;
-	case 2:
-		ColaClientes();
-		break;
-	case 3:
-		break;
-	}
+	string opciones[] = {
+		"\tMenu de plantas (Pila)",
+		"\tMenu de cliente (Cola)",
+		"\tSalir"
+	};
 
-	}
-=======
-	do {
-		system("cls");
-		cout << "\nBIENVENIDO AL SISTEMA DE RAÍCES VERDES GT" << endl;
-		cout << "1. Menu de plantas (Pila)" << endl;
-		cout << "2. Menu de clientes (Cola)" << endl;
-		cout << "3. Salir" << endl;
-		cout << "Ingrese una opcion valida: "; cin >> opcion;
 	
+	string encabezado =
+		"\t--------------------o--------------------\n"
+		"\tBIENVENIDO AL SISTEMA DE RAICES VERDES GT\n"
+		"\t--------------------o--------------------\n"
+		"\t        INTEGRANTES DEL GRUPO\n"
+		"\t[ Cristian Mucun  | 2290-17-17851   ]\n"
+		"\t[ Bryan Anleu     | 2290-20-23001   ]\n"
+		"\t[ David Hernandez | 2290-24-10427   ]\n"
+		"\t--------------------o--------------------";
+
+	do {
+		opcion = menuConFlecha(opciones, 3, encabezado);
 
 		switch (opcion) {
 		case 1:
 			PilaPlantas();
-			system("pause");
 			break;
 		case 2:
 			ColaClientes();
-			system("pause");
 			break;
 		case 3:
-			cout << "\nSaliendo del sistema, Gracias por visitarnos." << endl;
+			cout << "\nSaliendo del sistema, gracias por visitarnos." << endl;
 			break;
 		default:
-			cout << "\nERROR.. Opcion no validad." << endl;
+			cout << "\nERROR.. Opcion no valida." << endl;
 			system("pause");
 			break;
 		}
+
 	} while (opcion != 3);
 }
->>>>>>> ccda8aa (Modulo de filas)
 
 void PilaPlantas() {
 	int op;
+
+	string opciones[]{
+		"1. Ingrese una nueva planta.",
+		"2. Ver inventario de plantas.",
+		"3. Modificar una planta.",
+		"4. Buscar una planta.",
+		"5. Eliminar una planta.",
+		"6. Regresar al menu principal."
+	};
+
+	string encabezado =
+		"\nMODULO DE PLANTAS - PILA\n"
+		"----------------------------";
+
 	do
 	{
-		system("cls");
-		cout << "\nMODULO DE PLANTAS - PILA" << endl;
-		cout << "1. Ingrese una nueva planta." << endl;
-		cout << "2. Ver inventario de plantas." << endl;
-		cout << "3. Modificar una planta." << endl;
-		cout << "4. Buscar una planta." << endl;
-		cout << "5. Eliminar una planta." << endl;
-		cout << "6. Regresar al menu principal." << endl;
-		cout << "Ingrese una opcion valida: "; cin >> op;
+		op = menuConFlecha(opciones, 6, encabezado);
 
-		switch(op) {
+		switch (op) {
 		case 1:
 			ingresarPlanta();
 			system("pause");
@@ -164,26 +201,31 @@ void PilaPlantas() {
 		case 6:
 			break;
 		default:
-			cout << "\nERROR.. Opcion no validad." << endl;
+			cout << "\nERROR.. Opcion no valida." << endl;
 			system("pause");
 			break;
 		}
 
 	} while (op != 6);
 }
-void ColaClientes(){
+void ColaClientes() {
 	int op;
-	do
-	{
-		system("cls");
-		cout << "\nMODULO DE PLANTAS - PILA" << endl;
-		cout << "1. Ingrese un nuevo cliente." << endl;
-		cout << "2. Ver lista de clientes." << endl;
-		cout << "3. Modificar un cliente." << endl;
-		cout << "4. Buscar un cliente." << endl;
-		cout << "5. Eliminar un cliente." << endl;
-		cout << "6. Regresar al menu principal." << endl;
-		cout << "Ingrese una opcion valida: "; cin >> op;
+
+	string opciones[] = {
+		"Ingrese un nuevo cliente",
+		"Ver lista de clientes",
+		"Modificar un cliente",
+		"Buscar un cliente",
+		"Eliminar un cliente",
+		"Regresar al menu principal"
+	};
+
+	string encabezado =
+		"\nMODULO DE CLIENTES - COLA\n"
+		"-----------------------------";
+
+	do {
+		op = menuConFlecha(opciones, 6, encabezado);
 
 		switch (op) {
 		case 1:
@@ -209,10 +251,11 @@ void ColaClientes(){
 		case 6:
 			break;
 		default:
-			cout << "\nERROR.. Opcion no validad." << endl;
+			cout << "\nERROR.. Opcion no valida." << endl;
 			system("pause");
 			break;
 		}
+
 
 	} while (op != 6);
 }
@@ -242,7 +285,7 @@ void ingresarPlanta() {
 		delete nuevo;
 		return;
 	}
-	
+
 	cin.ignore();
 	cout << "Ingrese Nombre: ";
 	getline(cin, nuevo->dato.nombre);
@@ -376,7 +419,7 @@ void eliminarPlanta() {
 
 /* FUNCION DE COLA */
 NodoCliente* buscarClientePorId(int id) {
-	NodoCliente* aux = frente;
+	NodoCliente* aux = cola.frente;
 
 	while (aux != NULL) {
 		if (aux->dato.id == id) {
@@ -389,18 +432,132 @@ NodoCliente* buscarClientePorId(int id) {
 }
 void ingresarCliente() {
 	//Aqui va el código de ingresar colas
+	system("cls");
+	NodoCliente* nuevo = new NodoCliente;
+	cout << "\nINGRESAR UN NUEVO CLIENTE." << endl;
+	cout << "Ingrese ID: ";
+	cin >> nuevo->dato.id;
+
+	//Verificar que no exista un cliente con el mismo ID
+	if (buscarClientePorId(nuevo->dato.id) != NULL) {
+		cout << "Ya existe un cliente con ese ID." << endl;
+		delete nuevo;
+		return;
+	}
+
+	cin.ignore();
+	cout << "Ingrese Nombre: ";
+	getline(cin, nuevo->dato.nombre);
+
+	cout << "Ingrese Direccion: ";
+	getline(cin, nuevo->dato.direccion);
+
+	cout << "Ingrese Telefono: ";
+	cin >> nuevo->dato.telefono;
+
+	nuevo->siguiente = NULL;
+
+	if (cola.frente == NULL) {
+		cola.frente = nuevo;
+		cola.fincola = nuevo;
+	}
+	else {
+		cola.fincola->siguiente = nuevo;
+		cola.fincola = nuevo;
+	}
+	cola.cantidad++;
+	cout << "\nCliente agregado correctamente." << endl;
 }
 void verClientes() {
+	system("cls");
+	NodoCliente* aux = cola.frente;
 
+	cout << "\nLISTA DE CLIENTES." << endl;
+	if (aux == NULL) {
+		cout << "No hay clientes registrados." << endl;
+		return;
+	}
+
+	while (aux != NULL) {
+		cout << "\nID: " << aux->dato.id << endl;
+		cout << "Nombre: " << aux->dato.nombre << endl;
+		cout << "Direccion: " << aux->dato.direccion << endl;
+		cout << "Telefono: " << aux->dato.telefono << endl;
+		cout << "-----------------------------" << endl;
+		aux = aux->siguiente;
+	}
+
+	cout << "Total de clientes en cola: " << cola.cantidad << endl;
 }
 void modificiarCliente() {
+	system("cls");
 
+	int idBuscado;
+	cout << "\nMODIFICAR CLIENTE" << endl;
+	cout << "Ingrese el ID del cliente a modificar: ";
+	cin >> idBuscado;
+
+	NodoCliente* aux = buscarClientePorId(idBuscado);
+
+	if (aux == NULL) {
+		cout << "No se encontro el cliente." << endl;
+		return;
+	}
+
+	cin.ignore();
+	cout << "Nuevo nombre: ";
+	getline(cin, aux->dato.nombre);
+
+	cout << "Nueva direccion: ";
+	getline(cin, aux->dato.direccion);
+
+	cout << "Nuevo telefono: ";
+	cin >> aux->dato.telefono;
+
+	cout << "\nCliente modificado correctamente." << endl;
 }
 void buscarCliente() {
+	//Misma logica y estructura que buscarPlanta(); pero con clientes
+	int idBuscado;
+	cout << "\n--- BUSCAR CLIENTE ---" << endl;
+	cout << "Ingrese el ID del cliente: ";
+	cin >> idBuscado;
 
+	NodoCliente* aux = buscarClientePorId(idBuscado);
+
+	if (aux == NULL) {
+		cout << "No se encontro el cliente." << endl;
+	}
+	else {
+		cout << "\nCliente encontrado:" << endl;
+		cout << "ID: " << aux->dato.id << endl;
+		cout << "Nombre: " << aux->dato.nombre << endl;
+		cout << "Direccion: " << aux->dato.direccion << endl;
+		cout << "Telefono: " << aux->dato.telefono << endl;
+	}
 }
 void eliminarCliente() {
+	system("cls");
 
+	if (cola.frente == NULL) {
+		cout << "No hay clientes para eliminar." << endl;
+		return;
+	}
+
+	NodoCliente* aux = cola.frente;
+	cout << "\nSe eliminara el cliente al frente de la cola:" << endl;
+	cout << "ID: " << aux->dato.id << endl;
+	cout << "Nombre: " << aux->dato.nombre << endl;
+
+	cola.frente = cola.frente->siguiente;
+
+	if (cola.frente == NULL) {
+		cola.fincola = NULL;
+	}
+
+	delete aux;
+	cola.cantidad--;
+	cout << "Cliente eliminado correctamente." << endl;
 }
 
 bool login(string nombre, string contra) {
@@ -445,13 +602,13 @@ void liberarPila() {
 void liberarCola() {
 	NodoCliente* aux;
 
-	while (frente != NULL) {
-		aux = frente;
-		frente = frente->siguiente;
+	while (cola.frente != NULL) {
+		aux = cola.frente;
+		cola.frente = cola.frente->siguiente;
 		delete aux;
 	}
 
-	fincola = NULL;
+	cola.fincola = NULL;
 }
 
 int main() {
