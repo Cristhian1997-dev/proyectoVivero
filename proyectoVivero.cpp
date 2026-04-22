@@ -278,7 +278,12 @@ void ingresarPlanta() {
 
 	cout << "\nINGRESAR UNA NUEVA PLANTA." << endl;
 	cout << "Ingrese ID: ";
-	cin >> nuevo->dato.id;
+	while (!(cin >> nuevo->dato.id)) {
+		cout << "Entrada invalida. Solo se permiten numero." << endl;
+		cin.clear();
+		cin.ignore(1000, '\n');
+		cout << "Ingrese ID: ";
+	}
 
 	if (buscarPlantaPorId(nuevo->dato.id) != NULL) {
 		cout << "Ya existe una planta con ese ID." << endl;
@@ -297,10 +302,21 @@ void ingresarPlanta() {
 	getline(cin, nuevo->dato.color);
 
 	cout << "Ingrese Precio: ";
-	cin >> nuevo->dato.precio;
+	while (!(cin >> nuevo->dato.precio)) {
+		cout << "Entrada invalida. Solo se permiten numeros." << endl;
+		cin.clear();
+		cin.ignore(1000, '\n');
+		cout << "Ingrese Precio: ";
+	}
 
 	cout << "Ingrese Cantidad: ";
-	cin >> nuevo->dato.cantidad;
+	while (!(cin >> nuevo->dato.cantidad)) {
+		cout << "Entrada invalida. Solo se permiten numeros." << endl;
+		cin.clear();
+		cin.ignore(1000, '\n');
+		cout << "Ingrese Cantidad: ";
+	}
+	
 
 	nuevo->siguiente = cima;
 	cima = nuevo;
@@ -388,33 +404,27 @@ void buscarPlanta() {
 void eliminarPlanta() {
 	system("cls");
 
-	int idBuscado;
-	cout << "\n--- ELIMINAR PLANTA ---" << endl;
-	cout << "Ingrese el ID de la planta a eliminar: ";
-	cin >> idBuscado;
-
-	NodoPlanta* actual = cima;
-	NodoPlanta* anterior = NULL;
-
-	while (actual != NULL && actual->dato.id != idBuscado) {
-		anterior = actual;
-		actual = actual->siguiente;
-	}
-
-	if (actual == NULL) {
-		cout << "No se encontro la planta." << endl;
+	//1. Validacion si la pila esta vacia
+	if (cima == NULL) {
+		cout << "\nNo hay plantas en el inventario para eliminar." << endl;
 		return;
 	}
 
-	if (anterior == NULL) {
-		cima = actual->siguiente;
-	}
-	else {
-		anterior->siguiente = actual->siguiente;
-	}
+	//Apuntamos al nodo de la sima
+	NodoPlanta* aux = cima;
 
-	delete actual;
-	cout << "Planta eliminada correctamente." << endl;
+	//Mostramos que se va a eliminar
+	cout << "\nELIMINAR PLANTA" << endl;
+	cout << "Se eliminara la planta en la sima de la pila:" << endl;
+	cout << "ID: " << aux->dato.id << endl;
+	cout << "Nombre: " << aux->dato.nombre << endl;
+
+	//Movemos la sima al siguiente nodo debajo de ella
+	cima = cima->siguiente;
+
+	delete aux;
+	cout << "\nPanta eliminada correctamente." << endl;
+
 }
 
 /* FUNCION DE COLA */
@@ -436,7 +446,12 @@ void ingresarCliente() {
 	NodoCliente* nuevo = new NodoCliente;
 	cout << "\nINGRESAR UN NUEVO CLIENTE." << endl;
 	cout << "Ingrese ID: ";
-	cin >> nuevo->dato.id;
+	while (!(cin >> nuevo->dato.id)) {
+		cout << "Entrada invalida. Solo se permite numeros." << endl;
+		cin.clear();
+		cin.ignore();
+		cout << "Ingresa ID: ";
+	}
 
 	//Verificar que no exista un cliente con el mismo ID
 	if (buscarClientePorId(nuevo->dato.id) != NULL) {
@@ -453,7 +468,12 @@ void ingresarCliente() {
 	getline(cin, nuevo->dato.direccion);
 
 	cout << "Ingrese Telefono: ";
-	cin >> nuevo->dato.telefono;
+	while (!(cin >> nuevo->dato.telefono)) {
+		cout << "Entrada invalida. Solo se permiten numeros." << endl;
+		cin.clear();
+		cin.ignore();
+		cout << "Ingrese Telefono: ";
+	}
 
 	nuevo->siguiente = NULL;
 
