@@ -59,8 +59,27 @@ struct Cola {
 struct Proveedor {
 	int id;
 	string nombre;
+	string tipo; //local, exportaciones, frecuente
 	string empresa;
 	int telefono;
+	string contacto;
+};
+//Nodo para lista simple enlazada (proveedores locales)
+struct NodoSimple {
+	Proveedor dato;
+	NodoSimple* siguiente;
+};
+//Nodo para lista doblemente enlazada (proveedores internacionales)
+struct NodoDoble {
+	Proveedor dato;
+	NodoDoble* siguiente;
+	NodoDoble* anterior;
+};
+struct ListaDoble {
+	int cantidad; //Para llevar conteo
+	NodoDoble* cabeza;
+	NodoDoble* cola;
+	ListaDoble() : cabeza(NULL), cola(NULL), cantidad(0) {}//Constructor para inicializar la lista vacía
 };
 struct NodoProveedor
 {
@@ -70,11 +89,12 @@ struct NodoProveedor
 
 //Variables globales 
 NodoPlanta* cima = NULL; //PILA
-Cola cola;
-
-//Punteros que serviran en la Lista Circular
+Cola cola; //Cola global para manejar los clientes
 NodoProveedor* inicioCircular = NULL;
 NodoProveedor* finCircular = NULL;
+NodoSimple* cabeza = NULL; //Lista simple para proveedores locales
+NodoDoble* cabezaDoble = NULL; //Lista doblemente enlazada exportadores
+
 
 
 //Prototipos de funciones
@@ -83,6 +103,8 @@ void PilaPlantas();
 void ColaClientes();
 void ListaCircularProveedor();
 int menuConFlecha(string opcion[], int total, string encabezado, int startY);
+//Funcion para el dibujo
+void dibujo();
 
 //Prototipo para la pila de plantas
 void ingresarPlanta();
@@ -102,6 +124,25 @@ bool login(string nombre, string contra);
 void liberarPila();
 void liberarCola();
 void liberarListaCircular();
+
+//Lista simple
+void ingresarProveedorLocalAlInicio(NodoSimple*& cabeza);
+void ingresarProveedorLocalAlFinal(NodoSimple*& cabeza);
+void buscarProveedorLocal(NodoSimple* cabeza);
+void verProveedoresLocales(NodoSimple*& cabeza);
+void modificarProveedorLocal(NodoSimple*& cabeza);
+void eliminarProveedorLocal(NodoSimple*& cabeza);
+void liberarListaSimple(NodoSimple*& cabeza);
+
+//Lista doblemente enlazada
+void ingresarProveedorInternacional(ListaDoble& lista);
+void ingresarProveedorInternacionalAlInicio(ListaDoble& lista);
+void buscarProveedorInternacional(ListaDoble& lista);
+void verProveedoresInternacionales(ListaDoble& lista);
+void verReversaProveedoresInternacionales(ListaDoble& lista);
+void modificarProveedorInternacional(ListaDoble& lista);
+void eliminarProveedorInternacional(ListaDoble& lista);
+void liberarListaDoble(ListaDoble& lista);
 
 //Prototipo Lista Circular
 void ingresarProveedor();
@@ -232,6 +273,61 @@ void ColaClientes() {
 
 
 	} while (op != 6);
+}
+void ProveedoresLocales() {
+	int op;
+	string opciones[] = {
+		"1. Ingrese un nuevo proveedor local al inicio",
+		"2. Ingrese un nuevo proveedor local al final",
+		"3. Ver lista de proveedores locales",
+		"4. Modificar un proveedor local",
+		"5. Buscar un proveedor local",
+		"6. Eliminar un proveedor local",
+		"7. Limpiar toda la lista de proveedores locales",
+		"8. Regresar al menu principal"
+	};
+	do {
+		op = menuConFlecha(opciones, 8, "MODULO DE PROVEEDORES LOCALES - LISTA SIMPLE", 3);
+		switch (op) {
+		case 1: ingresarProveedorLocalAlInicio(cabeza); system("pause"); break;
+		case 2: ingresarProveedorLocalAlFinal(cabeza); system("pause"); break;
+		case 3:	verProveedoresLocales(cabeza); system("pause"); break;
+		case 4:	modificarProveedorLocal(cabeza); system("pause"); break;
+		case 5: buscarProveedorLocal(cabeza); system("pause"); break;
+		case 6: eliminarProveedorLocal(cabeza); system("pause"); break;
+		case 7: liberarListaSimple(cabeza); system("pause"); break;
+		case 8: break;
+		}
+	} while (op != 8);
+}
+void ProveedoresInternacionales() {
+	ListaDoble listaInternacional; //Lista para manejar los proveedores internacionales
+	int op;
+	string opciones[] = {
+		"1. Ingrese un nuevo proveedor internacional al final",
+		"2. Ingrese un nuevo proveedor internacional al inicio",
+		"3. Ver lista de proveedores internacionales",
+		"4. Ver lista de proveedores internacionales en orden reverso",
+		"5. Modificar un proveedor internacional",
+		"6. Buscar un proveedor internacional",
+		"7. Eliminar un proveedor internacional",
+		"8. Limpiar toda la lista de proveedores internacionales",
+		"9. Regresar al menu principal"
+	};
+	do {
+		op = menuConFlecha(opciones, 9, "MODULO DE PROVEEDORES INTERNACIONALES - LISTA DOBLE", 3);
+		switch (op) {
+		case 1: ingresarProveedorInternacional(listaInternacional); system("pause"); break;
+		case 2: ingresarProveedorInternacionalAlInicio(listaInternacional); system("pause"); break;
+		case 3: verProveedoresInternacionales(listaInternacional); system("pause"); break;
+		case 4: verReversaProveedoresInternacionales(listaInternacional); system("pause"); break;
+		case 5: modificarProveedorInternacional(listaInternacional); system("pause"); break;
+		case 6: buscarProveedorInternacional(listaInternacional); system("pause"); break;
+		case 7: eliminarProveedorInternacional(listaInternacional); system("pause"); break;
+		case 8: liberarListaDoble(listaInternacional); system("pause"); break;
+		case 9: break;
+		}
+	} while (op != 9);
 }
 void ListaCircularProveedor() {
 	int op;
@@ -479,7 +575,7 @@ void ingresarCliente() {
 	system("cls");
 	NodoCliente* nuevo = new NodoCliente;
 	SetConsoleTextAttribute(hConsole, 9);
-	gotoxy(25, 3); cout << "---- INGRESAR UN NUEVO CLIENTE ----" << endl;;
+	gotoxy(25, 3); cout << "---- INGRESAR UN NUEVO CLIENTE ----" << endl;
 	gotoxy(25, 5); cout << "Ingrese ID: ";
 	while (!(cin >> nuevo->dato.id)) {
 		SetConsoleTextAttribute(hConsole, 4);
@@ -622,6 +718,528 @@ void eliminarCliente() {
 	cola.cantidad--;
 	SetConsoleTextAttribute(hConsole, 2);
 	gotoxy(25, 9); cout << "Cliente eliminado correctamente." << endl;
+}
+
+//Funciones de lista de proveedores locales (lista simple)
+NodoSimple* crearNodoProveedorLocal(Proveedor prov) {
+	NodoSimple* nuevo = new NodoSimple;
+	nuevo->dato = prov;
+	nuevo->siguiente = NULL;
+	return nuevo;
+}
+NodoSimple* buscarProveedorLocalPorId(NodoSimple* cabeza, int id) {
+	NodoSimple* aux = cabeza;
+	while (aux != NULL) {
+		if (aux->dato.id == id) {
+			return aux;
+		}
+		aux = aux->siguiente;
+	}
+	return NULL;
+}
+void ingresarProveedorLocalAlInicio(NodoSimple*& cabeza) {
+	//Codigo para ingresar proveedores locales
+	system("cls");
+	Proveedor nuevoProv;//Variable temporal para almacenar los datos del nuevo proveedor
+	SetConsoleTextAttribute(hConsole, 9);
+	gotoxy(25, 3); cout << "---- INGRESAR UN NUEVO PROVEEDOR LOCAL ----" << endl;
+	gotoxy(25, 5); cout << "Ingrese ID: ";
+	while (!(cin >> nuevoProv.id)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
+		cin.clear();
+		cin.ignore();
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 5); cout << "Ingresa ID: ";
+	}
+
+	//Verificar que no exista un proveedor con el mismo ID
+	if (buscarProveedorLocalPorId(cabeza, nuevoProv.id) != NULL) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 6); cout << "Ya existe un proveedor con ese ID." << endl;
+		return;
+	}
+
+	cin.ignore();
+	gotoxy(25, 6); cout << "Ingrese Nombre: ";
+	getline(cin, nuevoProv.nombre);
+
+	gotoxy(25, 7); cout << "Ingrese Tipo: ";
+	getline(cin, nuevoProv.tipo);
+
+	gotoxy(25, 8); cout << "Ingrese Telefono: ";
+	while (!(cin >> nuevoProv.telefono)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permiten numeros." << endl;
+		cin.clear();
+		cin.ignore();
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 8); cout << "Ingrese Telefono: ";
+	}
+
+	cin.ignore();
+	gotoxy(25, 9); cout << "Ingrese Contacto: ";
+	getline(cin, nuevoProv.contacto);
+
+	NodoSimple* nuevo = crearNodoProveedorLocal(nuevoProv);
+	nuevo->siguiente = cabeza;
+	cabeza = nuevo;
+	gotoxy(25, 13); cout << "Proveedor local agregado correctamente." << endl;
+}
+void ingresarProveedorLocalAlFinal(NodoSimple*& cabeza) {
+	//Codigo para ingresar proveedores locales al final de la lista
+	system("cls");
+	Proveedor nuevoProv;//Variable temporal para almacenar los datos del nuevo proveedor
+	SetConsoleTextAttribute(hConsole, 9);
+	gotoxy(25, 3); cout << "---- INGRESAR UN NUEVO PROVEEDOR LOCAL ----" << endl;
+	gotoxy(25, 5); cout << "Ingrese ID: ";
+	while (!(cin >> nuevoProv.id)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
+		cin.clear();
+		cin.ignore();
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 5); cout << "Ingresa ID: ";
+	}
+
+	//Verificar que no exista un proveedor con el mismo ID
+	if (buscarProveedorLocalPorId(cabeza, nuevoProv.id) != NULL) {
+		gotoxy(25, 6); cout << "Ya existe un proveedor con ese ID." << endl;
+		return;
+	}
+
+	cin.ignore();
+	gotoxy(25, 6); cout << "Ingrese Nombre: "; getline(cin, nuevoProv.nombre);
+
+	gotoxy(25, 7); cout << "Ingrese Tipo: "; getline(cin, nuevoProv.tipo);
+
+	gotoxy(25, 8); cout << "Ingrese Telefono: ";
+	while (!(cin >> nuevoProv.telefono)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permiten numeros." << endl;
+		cin.clear();
+		cin.ignore();
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 8); cout << "Ingrese Telefono: ";
+	}
+
+	cin.ignore();
+	gotoxy(25, 9); cout << "Ingrese Contacto: "; getline(cin, nuevoProv.contacto);
+
+	NodoSimple* nuevo = crearNodoProveedorLocal(nuevoProv);
+	if (cabeza == NULL) {
+		//Si la lista esta vacia, el nuevo nodo se convierte en la cabeza
+		cabeza = nuevo;
+	}
+	else {
+		//Recorremos la lista hasta el ultimo nodo
+		NodoSimple* aux = cabeza;
+		while (aux->siguiente != NULL) {
+			aux = aux->siguiente;
+		}
+		aux->siguiente = nuevo;
+	}
+
+	gotoxy(25, 9); cout << "Proveedor local agregado correctamente al final de la lista." << endl;
+}
+void buscarProveedorLocal(NodoSimple* cabeza) {
+	//Codigo para buscar proveedores locales
+	system("cls");
+	int idBuscado;
+	SetConsoleTextAttribute(hConsole, 9);
+	gotoxy(25, 3); cout << "---- BUSCAR PROVEEDOR LOCAL ----" << endl;
+	gotoxy(25, 5); cout << "Ingrese el ID del proveedor local: "; cin >> idBuscado;
+	NodoSimple* aux = buscarProveedorLocalPorId(cabeza, idBuscado);
+
+	if (aux == NULL) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 6); cout << "No se encontro el proveedor local." << endl;
+	}
+	else {
+		SetConsoleTextAttribute(hConsole, 2);
+		gotoxy(25, 6); cout << "\nProveedor local encontrado:" << endl;
+		gotoxy(25, 7); cout << "ID: " << aux->dato.id << endl;
+		gotoxy(25, 8); cout << "Nombre: " << aux->dato.nombre << endl;
+		gotoxy(25, 9); cout << "Tipo: " << aux->dato.tipo << endl;
+		gotoxy(25, 10); cout << "Telefono: " << aux->dato.telefono << endl;
+		gotoxy(25, 11); cout << "Contacto: " << aux->dato.contacto << endl;
+	}
+}
+void verProveedoresLocales(NodoSimple*& cabeza) {
+	//Codigo para ver proveedores locales
+	system("cls");
+	NodoSimple* aux = cabeza;
+	if (aux == NULL) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 5); cout << "No hay proveedores locales registrados." << endl;
+		return;
+	}
+
+	SetConsoleTextAttribute(hConsole, 2);
+	gotoxy(25, 3); cout << "---- PROVEEDORES LOCALES ----" << endl;
+	while (aux != NULL) {
+		gotoxy(25, 5); cout << "ID: " << aux->dato.id << endl;
+		gotoxy(25, 6); cout << "Nombre: " << aux->dato.nombre << endl;
+		gotoxy(25, 7); cout << "Tipo: " << aux->dato.tipo << endl;
+		gotoxy(25, 8); cout << "Telefono: " << aux->dato.telefono << endl;
+		gotoxy(25, 9); cout << "Contacto: " << aux->dato.contacto << endl;
+		gotoxy(25, 10); cout << "------------------------" << endl;
+		aux = aux->siguiente;
+	}
+}
+void modificarProveedorLocal(NodoSimple*& cabeza) {
+	//Codigo para modificar proveedores locales
+	system("cls");
+	int idBuscado;
+	SetConsoleTextAttribute(hConsole, 9);
+	gotoxy(25, 3); cout << "---- MODIFICAR PROVEEDOR LOCAL ----" << endl;
+	gotoxy(25, 5); cout << "Ingrese el ID del proveedor local a modificar: "; cin >> idBuscado;
+	NodoSimple* aux = buscarProveedorLocalPorId(cabeza, idBuscado);
+	if (aux == NULL) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 7); cout << "No se encontro el proveedor." << endl;
+		return;
+	}
+
+	cin.ignore();
+	gotoxy(25, 6); cout << "Nuevo nombre: ";
+	getline(cin, aux->dato.nombre);
+	gotoxy(25, 7); cout << "Nuevo tipo: ";
+	getline(cin, aux->dato.tipo);
+	gotoxy(25, 8); cout << "Nuevo telefono: ";
+	while (!(cin >> aux->dato.telefono)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permiten numeros." << endl;
+		cin.clear();
+		cin.ignore();
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 8); cout << "Ingrese Telefono: ";
+	}
+	cin.ignore();
+	gotoxy(25, 9); cout << "Nuevo contacto: ";
+	getline(cin, aux->dato.contacto);
+
+	gotoxy(25, 12); cout << "Proveedor local modificado correctamente." << endl;
+}
+void eliminarProveedorLocal(NodoSimple*& cabeza) {
+	//Codigo para eliminar proveedores locales
+	system("cls");
+	int idBuscado;
+	SetConsoleTextAttribute(hConsole, 4);
+	gotoxy(25, 3); cout << "---- ELIMINAR PROVEEDOR LOCAL ----" << endl;
+	gotoxy(25, 5); cout << "Ingrese el ID del proveedor local a eliminar: "; cin >> idBuscado;
+	NodoSimple* aux = buscarProveedorLocalPorId(cabeza, idBuscado);
+	if (aux == NULL) {
+		gotoxy(25, 7); cout << "No se encontro el proveedor." << endl;
+		return;
+	}
+	if (aux == cabeza) {//Si el nodo a eliminar es el primero de la lista
+		cabeza = cabeza->siguiente;//Movemos la cabeza al siguiente nodo
+	}
+	else {
+		NodoSimple* prev = cabeza;//Si el nodo a eliminar no es el primero, buscamos el nodo anterior a este
+		while (prev->siguiente != aux) {
+			prev = prev->siguiente;//Movemos el nodo anterior hasta que su siguiente sea el nodo a eliminar
+		}
+		prev->siguiente = aux->siguiente;
+	}
+	delete aux;
+	gotoxy(25, 7); cout << "\nProveedor local eliminado correctamente." << endl;
+}
+void liberarListaSimple(NodoSimple*& cabeza) {
+	//Codigo para liberar memoria de la lista simple
+	while (cabeza != NULL) {
+		NodoSimple* aux = cabeza;
+		cabeza = cabeza->siguiente;
+		delete aux;
+	}
+	gotoxy(25, 12); cout << "Memoria de la lista simple de proveedores locales liberada correctamente." << endl;
+}
+
+//Funciones para la lista de proveedores internacionales (lista doblemente enlazada)
+//Crear un nuevo nodo para la lista doblemente enlazada
+NodoDoble* crearNodoProveedorInternacional(const Proveedor& prov) {
+	NodoDoble* nuevo = new NodoDoble();
+	nuevo->dato = prov;
+	nuevo->siguiente = NULL;
+	nuevo->anterior = NULL;
+	return nuevo;
+}
+NodoDoble* buscarProveedorInternacionalPorID(ListaDoble& lista, int id) { //Buscar un proveedor internacional por ID (devuelve el nodo o NULL si no se encuentra)
+	NodoDoble* aux = lista.cabeza;
+	while (aux != NULL) {
+		if (aux->dato.id == id) {
+			return aux;
+		}
+		aux = aux->siguiente;
+	}
+	return NULL;
+}
+void ingresarProveedorInternacional(ListaDoble& lista) {
+	//Codigo para ingresar proveedores internacionales al final de la lista
+	system("cls");
+	Proveedor nuevoProv;//Variable temporal para almacenar los datos
+	SetConsoleTextAttribute(hConsole, 9);
+	gotoxy(25, 3); cout << "---- INGRESAR UN NUEVO PROVEEDOR INTERNACIONAL ----" << endl;
+	gotoxy(25, 5); cout << "Ingrese ID: ";
+	while (!(cin >> nuevoProv.id)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
+		cin.clear();
+		cin.ignore();
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 5); cout << "Ingresa ID: ";
+	}
+	//Verificar que no exista un proveedor con el mismo ID
+	if (buscarProveedorInternacionalPorID(lista, nuevoProv.id) != NULL) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 7); cout << "Ya existe un proveedor con ese ID." << endl;
+		return;
+	}
+	cin.ignore();
+	gotoxy(25, 6); cout << "Ingrese Nombre: "; getline(cin, nuevoProv.nombre);
+	gotoxy(25, 7); cout << "Ingrese Tipo: "; getline(cin, nuevoProv.tipo);
+	gotoxy(25, 8); cout << "Ingrese Telefono: ";
+	while (!(cin >> nuevoProv.telefono)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
+		cin.clear();
+		cin.ignore();
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 8); cout << "Ingresa Telefono: ";
+	}
+	cin.ignore();
+	gotoxy(25, 8); cout << "Ingrese Contacto: "; getline(cin, nuevoProv.contacto);
+	NodoDoble* nuevo = crearNodoProveedorInternacional(nuevoProv);
+	if (lista.cabeza == NULL) {
+		//Si la lista esta vacia, el nuevo nodo se convierte en la cabeza y cola
+		lista.cabeza = nuevo;
+		lista.cola = nuevo;
+	}
+	else {
+		//Si la lista no esta vacia, agregamos el nuevo nodo al final y actualizamos los punteros
+		nuevo->anterior = lista.cola;
+		lista.cola->siguiente = nuevo;
+		lista.cola = nuevo;
+	}
+	gotoxy(25, 12); cout << "Proveedor internacional agregado correctamente al final de la lista." << endl;
+}
+void ingresarProveedorInternacionalAlInicio(ListaDoble& lista) {
+	//Codigo para ingresar proveedores internacionales al inicio de la lista
+	system("cls");
+	Proveedor nuevoProv;//Variable temporal 
+	SetConsoleTextAttribute(hConsole, 9);
+	gotoxy(25, 3); cout << "---- INGRESAR UN NUEVO PROVEEDOR INTERNACIONAL ----" << endl;
+	gotoxy(25, 5); cout << "Ingrese ID: ";
+	while (!(cin >> nuevoProv.id)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
+		cin.clear();
+		cin.ignore();
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 5); cout << "Ingresa ID: ";
+	}
+	//Verificar que no exista un proveedor con el mismo ID
+	if (buscarProveedorInternacionalPorID(lista, nuevoProv.id) != NULL) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 7); cout << "Ya existe un proveedor con ese ID." << endl;
+		return;
+	}
+	cin.ignore();
+	gotoxy(25, 6); cout << "Ingrese Nombre: "; getline(cin, nuevoProv.nombre);
+	gotoxy(25, 7); cout << "Ingrese Tipo: "; getline(cin, nuevoProv.tipo);
+	gotoxy(25, 8); cout << "Ingrese Telefono: "; 
+	while (!(cin >> nuevoProv.telefono)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
+		cin.clear();
+		cin.ignore();
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 8); cout << "Ingrese Telefono: ";
+	}
+	cin.ignore();
+	gotoxy(25, 8); cout << "Ingrese Contacto: "; getline(cin, nuevoProv.contacto);
+	//Crea el nuevo nodo con los datos ingresados
+	NodoDoble* nuevo = crearNodoProveedorInternacional(nuevoProv);
+	if (lista.cabeza == NULL) {
+		//Si la lista esta vacia, el nuevo nodo se convierte en la cabeza y cola
+		lista.cabeza = nuevo;
+		lista.cola = nuevo;
+	}
+	else {
+		//Si la lista no esta vacia, agregamos el nuevo nodo al inicio y actualizamos los punteros
+		nuevo->siguiente = lista.cabeza;
+		lista.cabeza->anterior = nuevo;
+		lista.cabeza = nuevo;
+	}
+	gotoxy(25, 12); cout << "Proveedor internacional agregado correctamente al inicio de la lista." << endl;
+}
+void verProveedoresInternacionales(ListaDoble& lista) {
+	//Codigo para ver proveedores internacionales
+	system("cls");
+	NodoDoble* aux = lista.cabeza;//Apuntamos al primer nodo de la lista
+	if (aux == NULL) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 5); cout << "No hay proveedores internacionales registrados." << endl;
+		return;
+	}
+	SetConsoleTextAttribute(hConsole, 2);
+	gotoxy(25, 3); cout << "---- PROVEEDORES INTERNACIONALES ----" << endl;
+	while (aux != NULL) {//Recorremos la lista hasta el final
+		gotoxy(25, 5); cout << "ID: " << aux->dato.id << endl;
+		gotoxy(25, 6); cout << "Nombre: " << aux->dato.nombre << endl;
+		gotoxy(25, 7); cout << "Tipo: " << aux->dato.tipo << endl;
+		gotoxy(25, 8); cout << "Telefono: " << aux->dato.telefono << endl;
+		gotoxy(25, 9); cout << "Contacto: " << aux->dato.contacto << endl;
+		gotoxy(25, 10); cout << "------------------------" << endl;
+		aux = aux->siguiente;
+	}
+}
+void verReversaProveedoresInternacionales(ListaDoble& lista) {
+	//Codigo para ver proveedores internacionales en orden reverso
+	system("cls");
+	NodoDoble* aux = lista.cola;//Apuntamos al ultimo nodo de la lista
+	if (aux == NULL) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 3); cout << "No hay proveedores internacionales registrados." << endl;
+		return;
+	}
+	SetConsoleTextAttribute(hConsole, 2);
+	gotoxy(25, 3); cout << "---- PROVEEDORES INTERNACIONALES (ORDEN INVERSO) ----" << endl;
+	while (aux != NULL) {//Recorremos la lista del final al inicio
+		gotoxy(25, 4); cout << "ID: " << aux->dato.id << endl;
+		gotoxy(25, 5); cout << "Nombre: " << aux->dato.nombre << endl;
+		gotoxy(25, 6); cout << "Tipo: " << aux->dato.tipo << endl;
+		gotoxy(25, 7); cout << "Telefono: " << aux->dato.telefono << endl;
+		gotoxy(25, 8); cout << "Contacto: " << aux->dato.contacto << endl;
+		gotoxy(25, 9); cout << "------------------------" << endl;
+		aux = aux->anterior;
+	}
+}
+void modificarProveedorInternacional(ListaDoble& lista) {
+	//Codigo para modificar proveedores internacionales
+	system("cls");
+	if (lista.cabeza == NULL) {//Validacion si la lista esta vacia
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 5); cout << "No hay proveedores internacionales registrados para modificar." << endl;
+		return;
+	}
+	int idBuscado;
+	gotoxy(25, 3); cout << "---- MODIFICAR PROVEEDOR INTERNACIONAL ----" << endl;
+	gotoxy(25, 5); cout << "Ingrese el ID del proveedor internacional a modificar: ";
+	cin >> idBuscado;
+	while (!(cin >> idBuscado)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
+		cin.clear();
+		cin.ignore();
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 5); cout << "Ingrese el ID del proveedor internacional a modificar: ";
+	}
+	NodoDoble* aux = buscarProveedorInternacionalPorID(lista, idBuscado);
+	if (aux == NULL) {
+		gotoxy(25, 8); cout << "No se encontro el proveedor." << endl;
+		return;
+	}
+	cin.ignore();
+	gotoxy(25, 6); cout << "Nuevo nombre: "; getline(cin, aux->dato.nombre);
+	gotoxy(25, 7); cout << "Nuevo tipo: "; getline(cin, aux->dato.tipo);
+	gotoxy(25, 8); cout << "Nuevo telefono: ";
+	while (!(cin >> aux->dato.telefono)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
+		cin.clear();
+		cin.ignore();
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 8); cout << "Ingrese Telefono: ";
+	}
+	cin.ignore();
+	gotoxy(25, 9); cout << "Nuevo contacto: ";
+	getline(cin, aux->dato.contacto);
+	gotoxy(25, 12); cout << "Proveedor internacional modificado correctamente." << endl;
+}
+void buscarProveedorInternacional(ListaDoble& lista) {
+	//Codigo para buscar proveedores internacionales
+	system("cls");
+	if (lista.cabeza == NULL) {//Verificar que la lista no este vacia
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 5); cout << "No hay proveedores internacionales registrados para buscar." << endl;
+		return;
+	}
+	int idBuscado;
+	SetConsoleTextAttribute(hConsole, 9);
+	gotoxy(25, 3); cout << "---- BUSCAR PROVEEDOR INTERNACIONAL ----" << endl;
+	gotoxy(25, 5); cout << "Ingrese el ID del proveedor internacional: "; cin >> idBuscado;
+	NodoDoble* aux = buscarProveedorInternacionalPorID(lista, idBuscado);
+	if (aux == NULL) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 8); cout << "No se encontro el proveedor internacional." << endl;
+	}
+	else {
+		SetConsoleTextAttribute(hConsole, 2);
+		gotoxy(25, 7); cout << "Proveedor internacional encontrado:" << endl;
+		gotoxy(25, 8); cout << "ID: " << aux->dato.id << endl;
+		gotoxy(25, 9); cout << "Nombre: " << aux->dato.nombre << endl;
+		gotoxy(25, 10); cout << "Tipo: " << aux->dato.tipo << endl;
+		gotoxy(25, 11); cout << "Telefono: " << aux->dato.telefono << endl;
+		gotoxy(25, 12); cout << "Contacto: " << aux->dato.contacto << endl;
+	}
+}
+void eliminarProveedorInternacional(ListaDoble& lista) {
+
+	system("cls");
+	if (lista.cabeza == NULL) {//Validacion si la lista esta vacia
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 5); cout << "No hay proveedores internacionales registrados para eliminar." << endl;
+		return;
+	}
+	int idBuscado;
+	SetConsoleTextAttribute(hConsole, 9);
+	gotoxy(25, 3); cout << "---- ELIMINAR PROVEEDOR INTERNACIONAL ----" << endl;
+	gotoxy(25, 5); cout << "Ingrese el ID del proveedor internacional a eliminar: "; cin >> idBuscado;
+	NodoDoble* aux = buscarProveedorInternacionalPorID(lista, idBuscado);
+	if (aux == NULL) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 8); cout << "No se encontro el proveedor." << endl;
+		return;
+	}
+	if (aux == lista.cabeza) {//Si el nodo a eliminar es el primero de la lista
+		lista.cabeza = lista.cabeza->siguiente;//Movemos la cabeza al siguiente nodo
+		if (lista.cabeza != NULL) {
+			lista.cabeza->anterior = NULL;//Actualizamos el puntero anterior de la nueva cabeza
+		}
+		else {
+			lista.cola = NULL;//Si la lista queda vacia, actualizamos la cola a NULL
+		}
+	}
+	else if (aux == lista.cola) {//Si el nodo a eliminar es el ultimo de la lista
+		lista.cola = lista.cola->anterior;//Movemos la cola al nodo anterior
+		if (lista.cola != NULL) {
+			lista.cola->siguiente = NULL;//Actualizamos el puntero siguiente de la nueva cola
+		}
+		else {
+			lista.cabeza = NULL;//Si la lista queda vacia, actualizamos la cabeza a NULL
+		}
+	}
+	else {
+		aux->anterior->siguiente = aux->siguiente;//Si el nodo a eliminar esta en medio, actualizamos los punteros del nodo anterior y siguiente para saltar el nodo a eliminar
+		aux->siguiente->anterior = aux->anterior;//Actualizamos el puntero anterior del nodo siguiente para saltar el nodo a eliminar
+	}
+	delete aux;
+	gotoxy(25, 8); cout << "\nProveedor internacional eliminado correctamente." << endl;
+}
+void liberarListaDoble(ListaDoble& lista) {
+	//Codigo para liberar memoria 
+	NodoDoble* aux = lista.cabeza;//Apuntamos al primer nodo de la lista
+	while (aux != NULL) {//Recorremos la lista hasta el final
+		NodoDoble* temp = aux;
+		aux = aux->siguiente;//Movemos el puntero al siguiente nodo antes de eliminar el nodo actual
+		delete temp;//Eliminamos el nodo actual
+	}
+	//Actualizamos los punteros de cabeza y cola a NULL para indicar que la lista esta vacia
+	lista.cabeza = NULL;
+	lista.cola = NULL;
+	gotoxy(25, 5); cout << "Memoria de la lista doble de proveedores internacionales liberada correctamente." << endl;
 }
 
 //Lista Circular
