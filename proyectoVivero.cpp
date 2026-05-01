@@ -101,6 +101,8 @@ NodoDoble* cabezaDoble = NULL; //Lista doblemente enlazada exportadores
 void menuPrincipal();
 void PilaPlantas();
 void ColaClientes();
+void ProveedoresLocales();
+void ProveedoresInternacionales();
 void ListaCircularProveedor();
 int menuConFlecha(string opcion[], int total, string encabezado, int startY);
 //Funcion para el dibujo
@@ -201,6 +203,8 @@ void menuPrincipal() {
 	string opciones[] = {
 		"Menu de plantas (Pila)",
 		"Menu de cliente (Cola)",
+		"Modulo de proveedores (Lista simple)",
+		"Modulo de proveedores (lista doble)",
 		"Modulo de proveedores (Lista Circular)",
 		"Salir"
 	};
@@ -209,13 +213,14 @@ void menuPrincipal() {
 	string encabezado = "BIENVENIDO AL SISTEMA DE RAICES VERDES GT";
 
 	do {
-		opcion = menuConFlecha(opciones, 4, encabezado, 2);
+		opcion = menuConFlecha(opciones, 6, encabezado, 2);
 
 		switch (opcion) {
 		case 1: PilaPlantas(); break;
 		case 2: ColaClientes(); break;
-		case 3: ListaCircularProveedor(); break;
-		case 4:
+		case 3: ProveedoresLocales(); break;
+		case 4: ProveedoresInternacionales(); break;
+		case 6: ListaCircularProveedor(); break;
 			SetConsoleTextAttribute(hConsole, 2);
 			gotoxy(25, 20); cout << "Saliendo del sistema, gracias por visitarnos." << endl;
 			break;

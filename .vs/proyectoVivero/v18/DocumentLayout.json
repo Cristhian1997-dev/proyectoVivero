@@ -1,9 +1,10 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\usuario\\Documents\\Programas Progra I\\Vivero\\proyectoVivero\\",
+  "WorkspaceRootPath": "C:\\Users\\usuario\\Documents\\Archivos UMG\\05 Pensum quinto semestre 2026\\Programacion III\\nana-master\\proyectoVivero\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\usuario\\Documents\\Archivos UMG\\05 Pensum quinto semestre 2026\\Programacion III\\Proyecto Vivero\\proyectoVivero\\proyectoVivero.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{5AFA826D-B013-43B9-8BC1-F18E9134B431}|proyectoVivero.vcxproj|C:\\Users\\usuario\\Documents\\Archivos UMG\\05 Pensum quinto semestre 2026\\Programacion III\\nana-master\\proyectoVivero\\proyectoVivero.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{5AFA826D-B013-43B9-8BC1-F18E9134B431}|proyectoVivero.vcxproj|solutionrelative:proyectoVivero.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -19,13 +20,13 @@
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "proyectoVivero.cpp",
-              "DocumentMoniker": "C:\\Users\\usuario\\Documents\\Archivos UMG\\05 Pensum quinto semestre 2026\\Programacion III\\Proyecto Vivero\\proyectoVivero\\proyectoVivero.cpp",
-              "RelativeDocumentMoniker": "..\\..\\..\\Archivos UMG\\05 Pensum quinto semestre 2026\\Programacion III\\Proyecto Vivero\\proyectoVivero\\proyectoVivero.cpp",
-              "ToolTip": "C:\\Users\\usuario\\Documents\\Archivos UMG\\05 Pensum quinto semestre 2026\\Programacion III\\Proyecto Vivero\\proyectoVivero\\proyectoVivero.cpp",
-              "RelativeToolTip": "..\\..\\..\\Archivos UMG\\05 Pensum quinto semestre 2026\\Programacion III\\Proyecto Vivero\\proyectoVivero\\proyectoVivero.cpp",
-              "ViewState": "AgIAAF4CAAAAAAAAAAAAAI0AAAAVAAAAAAAAAA==",
+              "DocumentMoniker": "C:\\Users\\usuario\\Documents\\Archivos UMG\\05 Pensum quinto semestre 2026\\Programacion III\\nana-master\\proyectoVivero\\proyectoVivero.cpp",
+              "RelativeDocumentMoniker": "proyectoVivero.cpp",
+              "ToolTip": "C:\\Users\\usuario\\Documents\\Archivos UMG\\05 Pensum quinto semestre 2026\\Programacion III\\nana-master\\proyectoVivero\\proyectoVivero.cpp",
+              "RelativeToolTip": "proyectoVivero.cpp",
+              "ViewState": "AgIAAI0DAAAAAAAAAAAAAEgBAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-04-12T07:26:24.822Z",
+              "WhenOpened": "2026-05-01T06:08:29.354Z",
               "EditorCaption": ""
             }
           ]
