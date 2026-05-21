@@ -1,9 +1,14 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\usuario\\Documents\\Programas Progra I\\Vivero\\proyectoVivero\\",
+  "WorkspaceRootPath": "C:\\Users\\mucun\\source\\repos\\vivero1\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\usuario\\Documents\\Archivos UMG\\05 Pensum quinto semestre 2026\\Programacion III\\Proyecto Vivero\\proyectoVivero\\proyectoVivero.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{5AFA826D-B013-43B9-8BC1-F18E9134B431}|proyectoVivero.vcxproj|C:\\Users\\mucun\\source\\repos\\vivero1\\pila_plantas.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{5AFA826D-B013-43B9-8BC1-F18E9134B431}|proyectoVivero.vcxproj|solutionrelative:pila_plantas.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5AFA826D-B013-43B9-8BC1-F18E9134B431}|proyectoVivero.vcxproj|C:\\Users\\mucun\\source\\repos\\vivero1\\menu_ftxui.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{5AFA826D-B013-43B9-8BC1-F18E9134B431}|proyectoVivero.vcxproj|solutionrelative:menu_ftxui.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,14 +23,27 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "proyectoVivero.cpp",
-              "DocumentMoniker": "C:\\Users\\usuario\\Documents\\Archivos UMG\\05 Pensum quinto semestre 2026\\Programacion III\\Proyecto Vivero\\proyectoVivero\\proyectoVivero.cpp",
-              "RelativeDocumentMoniker": "..\\..\\..\\Archivos UMG\\05 Pensum quinto semestre 2026\\Programacion III\\Proyecto Vivero\\proyectoVivero\\proyectoVivero.cpp",
-              "ToolTip": "C:\\Users\\usuario\\Documents\\Archivos UMG\\05 Pensum quinto semestre 2026\\Programacion III\\Proyecto Vivero\\proyectoVivero\\proyectoVivero.cpp",
-              "RelativeToolTip": "..\\..\\..\\Archivos UMG\\05 Pensum quinto semestre 2026\\Programacion III\\Proyecto Vivero\\proyectoVivero\\proyectoVivero.cpp",
-              "ViewState": "AgIAAHoAAAAAAAAAAADwv48AAAAZAAAAAAAAAA==",
+              "Title": "pila_plantas.cpp",
+              "DocumentMoniker": "C:\\Users\\mucun\\source\\repos\\vivero1\\pila_plantas.cpp",
+              "RelativeDocumentMoniker": "pila_plantas.cpp",
+              "ToolTip": "C:\\Users\\mucun\\source\\repos\\vivero1\\pila_plantas.cpp",
+              "RelativeToolTip": "pila_plantas.cpp",
+              "ViewState": "AgIAAEUBAAAAAAAAAAAAAG0BAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-04-12T07:26:24.822Z",
+              "WhenOpened": "2026-05-21T07:25:42.748Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "menu_ftxui.cpp",
+              "DocumentMoniker": "C:\\Users\\mucun\\source\\repos\\vivero1\\menu_ftxui.cpp",
+              "RelativeDocumentMoniker": "menu_ftxui.cpp",
+              "ToolTip": "C:\\Users\\mucun\\source\\repos\\vivero1\\menu_ftxui.cpp",
+              "RelativeToolTip": "menu_ftxui.cpp",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAAB4AAABBAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2026-05-21T06:12:28.906Z",
               "EditorCaption": ""
             }
           ]

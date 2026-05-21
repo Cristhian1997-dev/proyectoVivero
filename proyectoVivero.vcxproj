@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -126,10 +126,35 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="proyectoVivero.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="globales.cpp" />
+    <ClCompile Include="consola.cpp" />
+    <ClCompile Include="login.cpp" />
+    <ClCompile Include="menu.cpp" />
+    <ClCompile Include="pila_plantas.cpp" />
+    <ClCompile Include="cola_clientes.cpp" />
+    <ClCompile Include="proveedores_locales.cpp" />
+    <ClCompile Include="proveedores_internacionales.cpp" />
+    <ClCompile Include="proveedores_circular.cpp" />
+    <ClCompile Include="arbol_abb.cpp" />
+    <ClCompile Include="menu_ftxui.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="modelos.h" />
+    <ClInclude Include="globales.h" />
+    <ClInclude Include="consola.h" />
+    <ClInclude Include="login.h" />
+    <ClInclude Include="menu.h" />
+    <ClInclude Include="pila_plantas.h" />
+    <ClInclude Include="cola_clientes.h" />
+    <ClInclude Include="proveedores_locales.h" />
+    <ClInclude Include="proveedores_internacionales.h" />
+    <ClInclude Include="proveedores_circular.h" />
+    <ClInclude Include="arbol_abb.h" />
+    <ClInclude Include="menu_ftxui.h" />
+  </ItemGroup>
 </Project>

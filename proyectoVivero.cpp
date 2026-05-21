@@ -87,6 +87,13 @@ struct NodoProveedor
 	NodoProveedor* siguiente;
 };
 
+//Nodo para Arbol Binario de Busqueda (ABB) de plantas
+struct NodoABB {
+	Planta dato;
+	NodoABB* izquierda;
+	NodoABB* derecha;
+};
+
 //Variables globales 
 NodoPlanta* cima = NULL; //PILA
 Cola cola; //Cola global para manejar los clientes
@@ -94,6 +101,7 @@ NodoProveedor* inicioCircular = NULL;
 NodoProveedor* finCircular = NULL;
 NodoSimple* cabeza = NULL; //Lista simple para proveedores locales
 NodoDoble* cabezaDoble = NULL; //Lista doblemente enlazada exportadores
+NodoABB* raizABB = NULL; //Raiz del Arbol Binario de Busqueda de plantas
 
 
 
@@ -101,7 +109,10 @@ NodoDoble* cabezaDoble = NULL; //Lista doblemente enlazada exportadores
 void menuPrincipal();
 void PilaPlantas();
 void ColaClientes();
+void ProveedoresLocales();
+void ProveedoresInternacionales();
 void ListaCircularProveedor();
+void ArbolABBPlantas();
 int menuConFlecha(string opcion[], int total, string encabezado, int startY);
 //Funcion para el dibujo
 void dibujo();
@@ -150,21 +161,38 @@ void verProveedores();
 void buscarProveedor();
 void eliminarProveedor();
 
+//Prototipos Arbol Binario de Busqueda (ABB)
+NodoABB* crearNodoABB(Planta nuevaPlanta);
+bool insertarNodoABB(NodoABB*& raiz, Planta nuevaPlanta);
+NodoABB* buscarNodoABB(NodoABB* raiz, int id);
+void ingresarPlantaABB();
+void buscarPlantaABB();
+void recorrerArbolABB();
+void preOrdenABB(NodoABB* raiz, int& y);
+void inOrdenABB(NodoABB* raiz, int& y);
+void posOrdenABB(NodoABB* raiz, int& y);
+void imprimirPlantaABB(const Planta& planta, int& y);
+NodoABB* encontrarMinimoABB(NodoABB* raiz);
+bool eliminarNodoABB(NodoABB*& raiz, int id);
+void eliminarPlantaABB();
+void mostrarArbolABBVertical();
+void imprimirArbolVertical(NodoABB* raiz, int nivel, string rama, int& y);
+void liberarArbolABB(NodoABB*& raiz);
 
 int menuConFlecha(string opciones[], int total, string encabezado, int startY) {
 	int seleccion = 0;
 	int tecla;
 
 	do {
-		system("cls");
+		::system("cls");
 		SetConsoleTextAttribute(hConsole, 13);
-		gotoxy(20, startY); cout << encabezado << endl;
-		gotoxy(20, startY + 3); cout << " ----------- CREADORES ------------- ";
-		gotoxy(20, startY + 4); cout << "[ Cristhian Mucun | 2290-17-17851   ]";
-		gotoxy(20, startY + 5); cout << "[ Bryan Anleu     | 2290-20-23001   ]";
-		gotoxy(20, startY + 6); cout << "[ David Hernandez | 2290-24-10427   ]";
-		gotoxy(20, startY + 7); cout << " ----------------------------------- ";
-		gotoxy(20, startY + 8); cout << "Use Flecha Arriba, Flecha Abajo y Enter.";
+		gotoxy(25, startY); cout << encabezado << endl;
+		gotoxy(25, startY + 3); cout << " ----------- CREADORES ------------- ";
+		gotoxy(25, startY + 4); cout << "[ Cristhian Mucun | 2290-17-17851   ]";
+		gotoxy(25, startY + 5); cout << "[ Bryan Anleu     | 2290-20-23001   ]";
+		gotoxy(25, startY + 6); cout << "[ David Hernandez | 2290-24-10427   ]";
+		gotoxy(25, startY + 7); cout << " ----------------------------------- ";
+		gotoxy(25, startY + 8); cout << "Use Flecha Arriba, Flecha Abajo y Enter.";
 
 		for (int i = 0; i < total; i++) {
 			gotoxy(25, startY + 10 + i); //Centramos las opciones dinámicamente
@@ -194,14 +222,16 @@ int menuConFlecha(string opciones[], int total, string encabezado, int startY) {
 	} while (tecla != 13);
 	return seleccion + 1;
 }
-
 void menuPrincipal() {
 	int opcion;
 
 	string opciones[] = {
 		"Menu de plantas (Pila)",
 		"Menu de cliente (Cola)",
+		"Menu de proveedores locales (Lista Simple)",
+		"Menu de proveedores internacionales (Lista Doble)",
 		"Modulo de proveedores (Lista Circular)",
+		"Modulo de plantas (Arbol ABB)",
 		"Salir"
 	};
 
@@ -209,19 +239,21 @@ void menuPrincipal() {
 	string encabezado = "BIENVENIDO AL SISTEMA DE RAICES VERDES GT";
 
 	do {
-		opcion = menuConFlecha(opciones, 4, encabezado, 2);
+		opcion = menuConFlecha(opciones, 7, encabezado, 2);
 
 		switch (opcion) {
 		case 1: PilaPlantas(); break;
 		case 2: ColaClientes(); break;
-		case 3: ListaCircularProveedor(); break;
-		case 4:
+		case 3: ProveedoresLocales(); break;
+		case 4: ProveedoresInternacionales(); break;
+		case 5: ListaCircularProveedor(); break;
+		case 6: ArbolABBPlantas(); break;
+		case 7:
 			SetConsoleTextAttribute(hConsole, 2);
 			gotoxy(25, 20); cout << "Saliendo del sistema, gracias por visitarnos." << endl;
 			break;
 		}
-
-	} while (opcion != 4);
+	} while (opcion != 7);
 }
 void PilaPlantas() {
 	int op;
@@ -240,11 +272,11 @@ void PilaPlantas() {
 		op = menuConFlecha(opciones, 6, "MODULO DE PLANTAS - PILA", 3);
 
 		switch (op) {
-		case 1:	ingresarPlanta(); system("pause"); break;
-		case 2: verPlantas(); system("pause"); break;
-		case 3:	modificarPlanta(); system("pause");	break;
-		case 4:	buscarPlanta();	system("pause"); break;
-		case 5:	eliminarPlanta(); system("pause"); break;
+		case 1:	ingresarPlanta(); ::system("pause"); break;
+		case 2: verPlantas(); ::system("pause"); break;
+		case 3:	modificarPlanta(); ::system("pause");	break;
+		case 4:	buscarPlanta();	::system("pause"); break;
+		case 5:	eliminarPlanta(); ::system("pause"); break;
 		case 6:	break;
 		}
 
@@ -263,11 +295,11 @@ void ColaClientes() {
 	do {
 		op = menuConFlecha(opciones, 6, "MODULO DE CLIENTES - COLA", 3);
 		switch (op) {
-		case 1:	ingresarCliente(); system("pause"); break;
-		case 2: verClientes(); system("pause"); break;
-		case 3: modificiarCliente(); system("pause"); break;
-		case 4: buscarCliente(); system("pause"); break;
-		case 5: eliminarCliente(); system("pause"); break;
+		case 1:	ingresarCliente(); ::system("pause"); break;
+		case 2: verClientes(); ::system("pause"); break;
+		case 3: modificiarCliente(); ::system("pause"); break;
+		case 4: buscarCliente(); ::system("pause"); break;
+		case 5: eliminarCliente(); ::system("pause"); break;
 		case 6:	break;
 		}
 
@@ -289,13 +321,13 @@ void ProveedoresLocales() {
 	do {
 		op = menuConFlecha(opciones, 8, "MODULO DE PROVEEDORES LOCALES - LISTA SIMPLE", 3);
 		switch (op) {
-		case 1: ingresarProveedorLocalAlInicio(cabeza); system("pause"); break;
-		case 2: ingresarProveedorLocalAlFinal(cabeza); system("pause"); break;
-		case 3:	verProveedoresLocales(cabeza); system("pause"); break;
-		case 4:	modificarProveedorLocal(cabeza); system("pause"); break;
-		case 5: buscarProveedorLocal(cabeza); system("pause"); break;
-		case 6: eliminarProveedorLocal(cabeza); system("pause"); break;
-		case 7: liberarListaSimple(cabeza); system("pause"); break;
+		case 1: ingresarProveedorLocalAlInicio(cabeza); ::system("pause"); break;
+		case 2: ingresarProveedorLocalAlFinal(cabeza); ::system("pause"); break;
+		case 3:	verProveedoresLocales(cabeza); ::system("pause"); break;
+		case 4:	modificarProveedorLocal(cabeza); ::system("pause"); break;
+		case 5: buscarProveedorLocal(cabeza); ::system("pause"); break;
+		case 6: eliminarProveedorLocal(cabeza); ::system("pause"); break;
+		case 7: liberarListaSimple(cabeza); ::system("pause"); break;
 		case 8: break;
 		}
 	} while (op != 8);
@@ -317,14 +349,14 @@ void ProveedoresInternacionales() {
 	do {
 		op = menuConFlecha(opciones, 9, "MODULO DE PROVEEDORES INTERNACIONALES - LISTA DOBLE", 3);
 		switch (op) {
-		case 1: ingresarProveedorInternacional(listaInternacional); system("pause"); break;
-		case 2: ingresarProveedorInternacionalAlInicio(listaInternacional); system("pause"); break;
-		case 3: verProveedoresInternacionales(listaInternacional); system("pause"); break;
-		case 4: verReversaProveedoresInternacionales(listaInternacional); system("pause"); break;
-		case 5: modificarProveedorInternacional(listaInternacional); system("pause"); break;
-		case 6: buscarProveedorInternacional(listaInternacional); system("pause"); break;
-		case 7: eliminarProveedorInternacional(listaInternacional); system("pause"); break;
-		case 8: liberarListaDoble(listaInternacional); system("pause"); break;
+		case 1: ingresarProveedorInternacional(listaInternacional); ::system("pause"); break;
+		case 2: ingresarProveedorInternacionalAlInicio(listaInternacional); ::system("pause"); break;
+		case 3: verProveedoresInternacionales(listaInternacional); ::system("pause"); break;
+		case 4: verReversaProveedoresInternacionales(listaInternacional); ::system("pause"); break;
+		case 5: modificarProveedorInternacional(listaInternacional); ::system("pause"); break;
+		case 6: buscarProveedorInternacional(listaInternacional); ::system("pause"); break;
+		case 7: eliminarProveedorInternacional(listaInternacional); ::system("pause"); break;
+		case 8: liberarListaDoble(listaInternacional); ::system("pause"); break;
 		case 9: break;
 		}
 	} while (op != 9);
@@ -343,14 +375,38 @@ void ListaCircularProveedor() {
 	do {
 		op = menuConFlecha(opciones, 5, encabezado, 3);
 		switch (op) {
-		case 1: ingresarProveedor(); system("pause"); break;
-		case 2: verProveedores(); system("pause"); break;
-		case 3: buscarProveedor(); system("pause"); break;
-		case 4: eliminarProveedor(); system("pause"); break;
+		case 1: ingresarProveedor(); ::system("pause"); break;
+		case 2: verProveedores(); ::system("pause"); break;
+		case 3: buscarProveedor(); ::system("pause"); break;
+		case 4: eliminarProveedor(); ::system("pause"); break;
 		case 5: break;
 		}
 	} while (op != 5);
 }
+void ArbolABBPlantas() {
+	int op;
+	string opciones[] = {
+		"1. Insertar nodo en el arbol ABB",
+		"2. Buscar nodo en el arbol ABB",
+		"3. Recorrer estructura Pre/In/Pos",
+		"4. Eliminar nodo del arbol ABB",
+		"5. Mostrar arbol en forma vertical",
+		"6. Regresar al menu principal"
+	};
+
+	do {
+		op = menuConFlecha(opciones, 6, "MODULO DE PLANTAS - ARBOL ABB", 3);
+		switch (op) {
+		case 1: ingresarPlantaABB(); ::system("pause"); break;
+		case 2: buscarPlantaABB(); ::system("pause"); break;
+		case 3: recorrerArbolABB(); ::system("pause"); break;
+		case 4: eliminarPlantaABB(); ::system("pause"); break;
+		case 5: mostrarArbolABBVertical(); ::system("pause"); break;
+		case 6: break;
+		}
+	} while (op != 6);
+}
+
 void dibujo() {
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 6);
 	SetConsoleOutputCP(CP_UTF8);// Codigo para que reconozca caracteres unicos
@@ -374,10 +430,10 @@ void dibujo() {
 		"       █████████████████████      \n"
 		"                                  \n"
 		"          PROGRAMACION 3          \n";
-	
 
-	system("pause");
-	system("cls");
+
+	::system("pause");
+	::system("cls");
 
 }
 
@@ -394,14 +450,14 @@ NodoPlanta* buscarPlantaPorId(int id) {
 	return NULL;
 }
 void ingresarPlanta() {
-	system("cls");
+	::system("cls");
 	NodoPlanta* nuevo = new NodoPlanta;
 
 	SetConsoleTextAttribute(hConsole, 9);
 	gotoxy(25, 3); cout << "--- INGRESAR UNA NUEVA PLANTA ---";
 	gotoxy(25, 5); cout << "Ingrese ID: ";
 	while (!(cin >> nuevo->dato.id)) {
-		system("cls");
+		::system("cls");
 		gotoxy(25, 3); cout << "--- INGRESAR UNA NUEVA PLANTA ---";
 		SetConsoleTextAttribute(hConsole, 4);
 		gotoxy(25, 4); cout << "Entrada invalida. Solo se permiten numero." << endl;
@@ -449,7 +505,7 @@ void ingresarPlanta() {
 	gotoxy(25, 12); cout << "Planta agregada correctamente." << endl;
 }
 void verPlantas() {
-	system("cls");
+	::system("cls");
 
 	NodoPlanta* aux = cima;
 	SetConsoleTextAttribute(hConsole, 9);
@@ -475,7 +531,7 @@ void verPlantas() {
 	}
 }
 void modificarPlanta() {
-	system("cls");
+	::system("cls");
 
 	int idBuscado;
 	SetConsoleTextAttribute(hConsole, 9);
@@ -504,7 +560,7 @@ void modificarPlanta() {
 	gotoxy(25, y++); cout << "Planta modificada correctamente." << endl;
 }
 void buscarPlanta() {
-	system("cls");
+	::system("cls");
 
 	int idBuscado;
 	SetConsoleTextAttribute(hConsole, 9);
@@ -529,7 +585,7 @@ void buscarPlanta() {
 	}
 }
 void eliminarPlanta() {
-	system("cls");
+	::system("cls");
 
 	//1. Validacion si la pila esta vacia
 	if (cima == NULL) {
@@ -572,7 +628,7 @@ NodoCliente* buscarClientePorId(int id) {
 }
 void ingresarCliente() {
 	//Aqui va el código de ingresar colas
-	system("cls");
+	::system("cls");
 	NodoCliente* nuevo = new NodoCliente;
 	SetConsoleTextAttribute(hConsole, 9);
 	gotoxy(25, 3); cout << "---- INGRESAR UN NUEVO CLIENTE ----" << endl;
@@ -622,7 +678,7 @@ void ingresarCliente() {
 	gotoxy(25, 9); cout << "Cliente agregado correctamente." << endl;
 }
 void verClientes() {
-	system("cls");
+	::system("cls");
 	NodoCliente* aux = cola.frente;
 
 	SetConsoleTextAttribute(hConsole, 9);
@@ -647,7 +703,7 @@ void verClientes() {
 	gotoxy(25, 9); cout << "Total de clientes en cola: " << cola.cantidad << endl;
 }
 void modificiarCliente() {
-	system("cls");
+	::system("cls");
 
 	int idBuscado;
 	SetConsoleTextAttribute(hConsole, 9);
@@ -692,7 +748,7 @@ void buscarCliente() {
 	}
 }
 void eliminarCliente() {
-	system("cls");
+	::system("cls");
 
 	SetConsoleTextAttribute(hConsole, 9);
 	gotoxy(25, 3); cout << "---- ELIMINAR CLIENTE ----" << endl;
@@ -739,7 +795,7 @@ NodoSimple* buscarProveedorLocalPorId(NodoSimple* cabeza, int id) {
 }
 void ingresarProveedorLocalAlInicio(NodoSimple*& cabeza) {
 	//Codigo para ingresar proveedores locales
-	system("cls");
+	::system("cls");
 	Proveedor nuevoProv;//Variable temporal para almacenar los datos del nuevo proveedor
 	SetConsoleTextAttribute(hConsole, 9);
 	gotoxy(25, 3); cout << "---- INGRESAR UN NUEVO PROVEEDOR LOCAL ----" << endl;
@@ -788,7 +844,7 @@ void ingresarProveedorLocalAlInicio(NodoSimple*& cabeza) {
 }
 void ingresarProveedorLocalAlFinal(NodoSimple*& cabeza) {
 	//Codigo para ingresar proveedores locales al final de la lista
-	system("cls");
+	::system("cls");
 	Proveedor nuevoProv;//Variable temporal para almacenar los datos del nuevo proveedor
 	SetConsoleTextAttribute(hConsole, 9);
 	gotoxy(25, 3); cout << "---- INGRESAR UN NUEVO PROVEEDOR LOCAL ----" << endl;
@@ -844,11 +900,12 @@ void ingresarProveedorLocalAlFinal(NodoSimple*& cabeza) {
 }
 void buscarProveedorLocal(NodoSimple* cabeza) {
 	//Codigo para buscar proveedores locales
-	system("cls");
+	::system("cls");
 	int idBuscado;
 	SetConsoleTextAttribute(hConsole, 9);
 	gotoxy(25, 3); cout << "---- BUSCAR PROVEEDOR LOCAL ----" << endl;
-	gotoxy(25, 5); cout << "Ingrese el ID del proveedor local: "; cin >> idBuscado;
+	gotoxy(25, 5); cout << "Ingrese el ID del proveedor local: ";
+	cin >> idBuscado;
 	NodoSimple* aux = buscarProveedorLocalPorId(cabeza, idBuscado);
 
 	if (aux == NULL) {
@@ -867,7 +924,7 @@ void buscarProveedorLocal(NodoSimple* cabeza) {
 }
 void verProveedoresLocales(NodoSimple*& cabeza) {
 	//Codigo para ver proveedores locales
-	system("cls");
+	::system("cls");
 	NodoSimple* aux = cabeza;
 	if (aux == NULL) {
 		SetConsoleTextAttribute(hConsole, 4);
@@ -889,11 +946,12 @@ void verProveedoresLocales(NodoSimple*& cabeza) {
 }
 void modificarProveedorLocal(NodoSimple*& cabeza) {
 	//Codigo para modificar proveedores locales
-	system("cls");
+	::system("cls");
 	int idBuscado;
 	SetConsoleTextAttribute(hConsole, 9);
 	gotoxy(25, 3); cout << "---- MODIFICAR PROVEEDOR LOCAL ----" << endl;
-	gotoxy(25, 5); cout << "Ingrese el ID del proveedor local a modificar: "; cin >> idBuscado;
+	gotoxy(25, 5); cout << "Ingrese el ID del proveedor local a modificar: ";
+	cin >> idBuscado;
 	NodoSimple* aux = buscarProveedorLocalPorId(cabeza, idBuscado);
 	if (aux == NULL) {
 		SetConsoleTextAttribute(hConsole, 4);
@@ -923,7 +981,7 @@ void modificarProveedorLocal(NodoSimple*& cabeza) {
 }
 void eliminarProveedorLocal(NodoSimple*& cabeza) {
 	//Codigo para eliminar proveedores locales
-	system("cls");
+	::system("cls");
 	int idBuscado;
 	SetConsoleTextAttribute(hConsole, 4);
 	gotoxy(25, 3); cout << "---- ELIMINAR PROVEEDOR LOCAL ----" << endl;
@@ -947,6 +1005,7 @@ void eliminarProveedorLocal(NodoSimple*& cabeza) {
 	gotoxy(25, 7); cout << "\nProveedor local eliminado correctamente." << endl;
 }
 void liberarListaSimple(NodoSimple*& cabeza) {
+	::system("cls");
 	//Codigo para liberar memoria de la lista simple
 	while (cabeza != NULL) {
 		NodoSimple* aux = cabeza;
@@ -977,7 +1036,7 @@ NodoDoble* buscarProveedorInternacionalPorID(ListaDoble& lista, int id) { //Busc
 }
 void ingresarProveedorInternacional(ListaDoble& lista) {
 	//Codigo para ingresar proveedores internacionales al final de la lista
-	system("cls");
+	::system("cls");
 	Proveedor nuevoProv;//Variable temporal para almacenar los datos
 	SetConsoleTextAttribute(hConsole, 9);
 	gotoxy(25, 3); cout << "---- INGRESAR UN NUEVO PROVEEDOR INTERNACIONAL ----" << endl;
@@ -1026,7 +1085,7 @@ void ingresarProveedorInternacional(ListaDoble& lista) {
 }
 void ingresarProveedorInternacionalAlInicio(ListaDoble& lista) {
 	//Codigo para ingresar proveedores internacionales al inicio de la lista
-	system("cls");
+	::system("cls");
 	Proveedor nuevoProv;//Variable temporal 
 	SetConsoleTextAttribute(hConsole, 9);
 	gotoxy(25, 3); cout << "---- INGRESAR UN NUEVO PROVEEDOR INTERNACIONAL ----" << endl;
@@ -1048,7 +1107,7 @@ void ingresarProveedorInternacionalAlInicio(ListaDoble& lista) {
 	cin.ignore();
 	gotoxy(25, 6); cout << "Ingrese Nombre: "; getline(cin, nuevoProv.nombre);
 	gotoxy(25, 7); cout << "Ingrese Tipo: "; getline(cin, nuevoProv.tipo);
-	gotoxy(25, 8); cout << "Ingrese Telefono: "; 
+	gotoxy(25, 8); cout << "Ingrese Telefono: ";
 	while (!(cin >> nuevoProv.telefono)) {
 		SetConsoleTextAttribute(hConsole, 4);
 		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
@@ -1076,7 +1135,7 @@ void ingresarProveedorInternacionalAlInicio(ListaDoble& lista) {
 }
 void verProveedoresInternacionales(ListaDoble& lista) {
 	//Codigo para ver proveedores internacionales
-	system("cls");
+	::system("cls");
 	NodoDoble* aux = lista.cabeza;//Apuntamos al primer nodo de la lista
 	if (aux == NULL) {
 		SetConsoleTextAttribute(hConsole, 4);
@@ -1097,7 +1156,7 @@ void verProveedoresInternacionales(ListaDoble& lista) {
 }
 void verReversaProveedoresInternacionales(ListaDoble& lista) {
 	//Codigo para ver proveedores internacionales en orden reverso
-	system("cls");
+	::system("cls");
 	NodoDoble* aux = lista.cola;//Apuntamos al ultimo nodo de la lista
 	if (aux == NULL) {
 		SetConsoleTextAttribute(hConsole, 4);
@@ -1118,7 +1177,7 @@ void verReversaProveedoresInternacionales(ListaDoble& lista) {
 }
 void modificarProveedorInternacional(ListaDoble& lista) {
 	//Codigo para modificar proveedores internacionales
-	system("cls");
+	::system("cls");
 	if (lista.cabeza == NULL) {//Validacion si la lista esta vacia
 		SetConsoleTextAttribute(hConsole, 4);
 		gotoxy(25, 5); cout << "No hay proveedores internacionales registrados para modificar." << endl;
@@ -1160,7 +1219,7 @@ void modificarProveedorInternacional(ListaDoble& lista) {
 }
 void buscarProveedorInternacional(ListaDoble& lista) {
 	//Codigo para buscar proveedores internacionales
-	system("cls");
+	::system("cls");
 	if (lista.cabeza == NULL) {//Verificar que la lista no este vacia
 		SetConsoleTextAttribute(hConsole, 4);
 		gotoxy(25, 5); cout << "No hay proveedores internacionales registrados para buscar." << endl;
@@ -1187,7 +1246,7 @@ void buscarProveedorInternacional(ListaDoble& lista) {
 }
 void eliminarProveedorInternacional(ListaDoble& lista) {
 
-	system("cls");
+	::system("cls");
 	if (lista.cabeza == NULL) {//Validacion si la lista esta vacia
 		SetConsoleTextAttribute(hConsole, 4);
 		gotoxy(25, 5); cout << "No hay proveedores internacionales registrados para eliminar." << endl;
@@ -1229,6 +1288,7 @@ void eliminarProveedorInternacional(ListaDoble& lista) {
 	gotoxy(25, 8); cout << "\nProveedor internacional eliminado correctamente." << endl;
 }
 void liberarListaDoble(ListaDoble& lista) {
+	::system("cls");
 	//Codigo para liberar memoria 
 	NodoDoble* aux = lista.cabeza;//Apuntamos al primer nodo de la lista
 	while (aux != NULL) {//Recorremos la lista hasta el final
@@ -1244,7 +1304,7 @@ void liberarListaDoble(ListaDoble& lista) {
 
 //Lista Circular
 void ingresarProveedor() {
-	system("cls");
+	::system("cls");
 	NodoProveedor* nuevo = new NodoProveedor;
 
 	SetConsoleTextAttribute(hConsole, 9);
@@ -1271,7 +1331,7 @@ void ingresarProveedor() {
 	cout << "\n\n";
 }
 void verProveedores() {
-	system("cls");
+	::system("cls");
 	SetConsoleTextAttribute(hConsole, 9);
 	gotoxy(25, 2); cout << "LISTA DE PROVEEDORES";
 
@@ -1296,7 +1356,7 @@ void verProveedores() {
 	cout << "\n";
 }
 void buscarProveedor() {
-	system("cls");
+	::system("cls");
 	int idBuscado;
 	bool encontrado = false;
 	gotoxy(25, 3); cout << "BUSCAR PROVEEDOR";
@@ -1325,7 +1385,7 @@ void buscarProveedor() {
 	cout << "\n\n";
 }
 void eliminarProveedor() {
-	system("cls");
+	::system("cls");
 	gotoxy(25, 3); cout << "ELIMINAR PROVEEDOR";
 
 	if (inicioCircular == NULL) {
@@ -1374,6 +1434,353 @@ void eliminarProveedor() {
 		gotoxy(25, 7); cout << "Proveedor no encontrado.";
 	}
 	cout << "\n\n";
+}
+
+//Funciones del Arbol Binario de Busqueda (ABB)
+NodoABB* crearNodoABB(Planta nuevaPlanta) {
+	NodoABB* nuevo = new NodoABB;
+	nuevo->dato = nuevaPlanta;
+	nuevo->izquierda = NULL;
+	nuevo->derecha = NULL;
+	return nuevo;
+}
+
+bool insertarNodoABB(NodoABB*& raiz, Planta nuevaPlanta) {
+	if (raiz == NULL) {
+		raiz = crearNodoABB(nuevaPlanta);
+		return true;
+	}
+
+	if (nuevaPlanta.id == raiz->dato.id) {
+		return false; //No se permiten ID repetidos en el ABB
+	}
+	else if (nuevaPlanta.id < raiz->dato.id) {
+		return insertarNodoABB(raiz->izquierda, nuevaPlanta);
+	}
+	else {
+		return insertarNodoABB(raiz->derecha, nuevaPlanta);
+	}
+}
+
+NodoABB* buscarNodoABB(NodoABB* raiz, int id) {
+	if (raiz == NULL) {
+		return NULL;
+	}
+
+	if (id == raiz->dato.id) {
+		return raiz;
+	}
+	else if (id < raiz->dato.id) {
+		return buscarNodoABB(raiz->izquierda, id);
+	}
+	else {
+		return buscarNodoABB(raiz->derecha, id);
+	}
+}
+
+void ingresarPlantaABB() {
+	::system("cls");
+	Planta nuevaPlanta;
+
+	SetConsoleTextAttribute(hConsole, 9);
+	gotoxy(25, 3); cout << "---- INSERTAR NODO EN ARBOL ABB ----" << endl;
+	gotoxy(25, 5); cout << "Ingrese ID: ";
+	while (!(cin >> nuevaPlanta.id)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permiten numeros.";
+		cin.clear();
+		cin.ignore(1000, '\n');
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 5); cout << "Ingrese ID: ";
+	}
+
+	if (buscarNodoABB(raizABB, nuevaPlanta.id) != NULL) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 7); cout << "ERROR: Ya existe un nodo con ese ID." << endl;
+		return;
+	}
+
+	cin.ignore(1000, '\n');
+	gotoxy(25, 6); cout << "Ingrese Nombre: "; getline(cin, nuevaPlanta.nombre);
+	gotoxy(25, 7); cout << "Ingrese Tipo: "; getline(cin, nuevaPlanta.tipo);
+	gotoxy(25, 8); cout << "Ingrese Color: "; getline(cin, nuevaPlanta.color);
+
+	gotoxy(25, 9); cout << "Ingrese Precio: ";
+	while (!(cin >> nuevaPlanta.precio)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permiten numeros.";
+		cin.clear();
+		cin.ignore(1000, '\n');
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 9); cout << "Ingrese Precio: ";
+	}
+
+	gotoxy(25, 10); cout << "Ingrese Cantidad: ";
+	while (!(cin >> nuevaPlanta.cantidad)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permiten numeros.";
+		cin.clear();
+		cin.ignore(1000, '\n');
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 10); cout << "Ingrese Cantidad: ";
+	}
+
+	if (insertarNodoABB(raizABB, nuevaPlanta)) {
+		SetConsoleTextAttribute(hConsole, 2);
+		gotoxy(25, 12); cout << "Nodo insertado correctamente en el arbol ABB." << endl;
+	}
+	else {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 12); cout << "No se pudo insertar el nodo." << endl;
+	}
+}
+
+void imprimirPlantaABB(const Planta& planta, int& y) {
+	gotoxy(25, y++); cout << "ID: " << planta.id;
+	gotoxy(25, y++); cout << "Nombre: " << planta.nombre;
+	gotoxy(25, y++); cout << "Tipo: " << planta.tipo;
+	gotoxy(25, y++); cout << "Color: " << planta.color;
+	gotoxy(25, y++); cout << "Precio: " << planta.precio;
+	gotoxy(25, y++); cout << "Cantidad: " << planta.cantidad;
+	gotoxy(25, y++); cout << "-----------------------------";
+}
+
+void buscarPlantaABB() {
+	::system("cls");
+	int idBuscado;
+
+	SetConsoleTextAttribute(hConsole, 9);
+	gotoxy(25, 3); cout << "---- BUSCAR NODO EN ARBOL ABB ----" << endl;
+	if (raizABB == NULL) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 5); cout << "El arbol ABB esta vacio." << endl;
+		return;
+	}
+
+	gotoxy(25, 5); cout << "Ingrese ID a buscar: ";
+	while (!(cin >> idBuscado)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permiten numeros.";
+		cin.clear();
+		cin.ignore(1000, '\n');
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 5); cout << "Ingrese ID a buscar: ";
+	}
+
+	NodoABB* encontrado = buscarNodoABB(raizABB, idBuscado);
+	int y = 7;
+
+	if (encontrado == NULL) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, y); cout << "No se encontro ningun nodo con ese ID." << endl;
+	}
+	else {
+		SetConsoleTextAttribute(hConsole, 2);
+		gotoxy(25, y++); cout << "Nodo encontrado:";
+		imprimirPlantaABB(encontrado->dato, y);
+	}
+}
+
+void preOrdenABB(NodoABB* raiz, int& y) {
+	if (raiz != NULL) {
+		imprimirPlantaABB(raiz->dato, y);
+		preOrdenABB(raiz->izquierda, y);
+		preOrdenABB(raiz->derecha, y);
+	}
+}
+
+void inOrdenABB(NodoABB* raiz, int& y) {
+	if (raiz != NULL) {
+		inOrdenABB(raiz->izquierda, y);
+		imprimirPlantaABB(raiz->dato, y);
+		inOrdenABB(raiz->derecha, y);
+	}
+}
+
+void posOrdenABB(NodoABB* raiz, int& y) {
+	if (raiz != NULL) {
+		posOrdenABB(raiz->izquierda, y);
+		posOrdenABB(raiz->derecha, y);
+		imprimirPlantaABB(raiz->dato, y);
+	}
+}
+
+void recorrerArbolABB() {
+	::system("cls");
+	if (raizABB == NULL) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 5); cout << "El arbol ABB esta vacio." << endl;
+		return;
+	}
+
+	int op;
+	string opciones[] = {
+		"1. Recorrido PreOrden",
+		"2. Recorrido InOrden",
+		"3. Recorrido PosOrden",
+		"4. Mostrar los tres recorridos",
+		"5. Regresar"
+	};
+
+	op = menuConFlecha(opciones, 5, "RECORRIDOS DEL ARBOL ABB", 3);
+	::system("cls");
+	int y = 4;
+	SetConsoleTextAttribute(hConsole, 11);
+
+	switch (op) {
+	case 1:
+		gotoxy(25, 2); cout << "RECORRIDO PREORDEN: RAIZ - IZQUIERDA - DERECHA";
+		preOrdenABB(raizABB, y);
+		break;
+	case 2:
+		gotoxy(25, 2); cout << "RECORRIDO INORDEN: IZQUIERDA - RAIZ - DERECHA";
+		inOrdenABB(raizABB, y);
+		break;
+	case 3:
+		gotoxy(25, 2); cout << "RECORRIDO POSORDEN: IZQUIERDA - DERECHA - RAIZ";
+		posOrdenABB(raizABB, y);
+		break;
+	case 4:
+		gotoxy(25, y++); cout << "PREORDEN:";
+		preOrdenABB(raizABB, y);
+		y++;
+		gotoxy(25, y++); cout << "INORDEN:";
+		inOrdenABB(raizABB, y);
+		y++;
+		gotoxy(25, y++); cout << "POSORDEN:";
+		posOrdenABB(raizABB, y);
+		break;
+	case 5:
+		break;
+	}
+}
+
+NodoABB* encontrarMinimoABB(NodoABB* raiz) {
+	while (raiz != NULL && raiz->izquierda != NULL) {
+		raiz = raiz->izquierda;
+	}
+	return raiz;
+}
+
+bool eliminarNodoABB(NodoABB*& raiz, int id) {
+	if (raiz == NULL) {
+		return false;
+	}
+
+	if (id < raiz->dato.id) {
+		return eliminarNodoABB(raiz->izquierda, id);
+	}
+	else if (id > raiz->dato.id) {
+		return eliminarNodoABB(raiz->derecha, id);
+	}
+	else {
+		NodoABB* aux = raiz;
+
+		//Caso 1: nodo hoja, sin hijos
+		if (raiz->izquierda == NULL && raiz->derecha == NULL) {
+			raiz = NULL;
+			delete aux;
+			return true;
+		}
+
+		//Caso 2: nodo con solo hijo derecho
+		if (raiz->izquierda == NULL) {
+			raiz = raiz->derecha;
+			delete aux;
+			return true;
+		}
+
+		//Caso 2: nodo con solo hijo izquierdo
+		if (raiz->derecha == NULL) {
+			raiz = raiz->izquierda;
+			delete aux;
+			return true;
+		}
+
+		//Caso 3: nodo con dos hijos. Se reemplaza por el menor del subarbol derecho.
+		NodoABB* sucesor = encontrarMinimoABB(raiz->derecha);
+		raiz->dato = sucesor->dato;
+		return eliminarNodoABB(raiz->derecha, sucesor->dato.id);
+	}
+}
+
+void eliminarPlantaABB() {
+	::system("cls");
+	int idEliminar;
+
+	SetConsoleTextAttribute(hConsole, 9);
+	gotoxy(25, 3); cout << "---- ELIMINAR NODO DEL ARBOL ABB ----" << endl;
+	if (raizABB == NULL) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 5); cout << "El arbol ABB esta vacio." << endl;
+		return;
+	}
+
+	gotoxy(25, 5); cout << "Ingrese ID a eliminar: ";
+	while (!(cin >> idEliminar)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permiten numeros.";
+		cin.clear();
+		cin.ignore(1000, '\n');
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 5); cout << "Ingrese ID a eliminar: ";
+	}
+
+	if (eliminarNodoABB(raizABB, idEliminar)) {
+		SetConsoleTextAttribute(hConsole, 2);
+		gotoxy(25, 7); cout << "Nodo eliminado correctamente del arbol ABB." << endl;
+	}
+	else {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 7); cout << "No se encontro un nodo con ese ID." << endl;
+	}
+}
+
+void imprimirArbolVertical(NodoABB* raiz, int nivel, string rama, int& y) {
+	if (raiz == NULL) {
+		return;
+	}
+
+	string espacios = "";
+	for (int i = 0; i < nivel; i++) {
+		espacios += "    ";
+	}
+
+	gotoxy(10, y++);
+	cout << espacios << rama << " -> ID: " << raiz->dato.id << " | " << raiz->dato.nombre;
+
+	if (raiz->izquierda != NULL) {
+		imprimirArbolVertical(raiz->izquierda, nivel + 1, "Izquierda", y);
+	}
+	if (raiz->derecha != NULL) {
+		imprimirArbolVertical(raiz->derecha, nivel + 1, "Derecha", y);
+	}
+}
+
+void mostrarArbolABBVertical() {
+	::system("cls");
+	SetConsoleTextAttribute(hConsole, 11);
+	gotoxy(25, 2); cout << "ARBOL ABB EN FORMA VERTICAL";
+	gotoxy(25, 3); cout << "No se muestra horizontal ni rotado; baja de raiz hacia hijos.";
+
+	if (raizABB == NULL) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 5); cout << "El arbol ABB esta vacio." << endl;
+		return;
+	}
+
+	int y = 6;
+	imprimirArbolVertical(raizABB, 0, "Raiz", y);
+	cout << "\n\n";
+}
+
+void liberarArbolABB(NodoABB*& raiz) {
+	if (raiz != NULL) {
+		liberarArbolABB(raiz->izquierda);
+		liberarArbolABB(raiz->derecha);
+		delete raiz;
+		raiz = NULL;
+	}
 }
 
 bool login(string nombre, string contra) {
@@ -1461,7 +1868,8 @@ int main() {
 	liberarPila();
 	liberarCola();
 	liberarListaCircular();
+	liberarArbolABB(raizABB);
 
-	system("pause");
+	::system("pause");
 	return 0;
 }
