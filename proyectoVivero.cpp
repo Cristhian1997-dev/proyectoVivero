@@ -24,10 +24,11 @@ struct Planta {
 	string nombre;
 	string tipo;
 	string color;
-	int precio;
+	float precio;
 	int cantidad;
 
 };
+
 struct Cliente {
 	int id;
 	string nombre;
@@ -37,7 +38,69 @@ struct Cliente {
 struct NodoPlanta {
 	Planta dato;
 	NodoPlanta* siguiente;
+	//Nodos para el ABB
+	NodoPlanta* izquierdo;
+	NodoPlanta* derecho;
+	NodoPlanta(): dato(),izquierdo(nullptr),derecho(nullptr){}
+	//Inicializador del ABB
+	NodoPlanta(const Planta& p) : dato(p),siguiente(nullptr), izquierdo(nullptr), derecho(nullptr) {}
 };
+//Funciones para el arbol ABB
+
+NodoPlanta* insertarPlanta(NodoPlanta* raiz, const Planta& nueva) {
+	if (raiz == nullptr) {
+		return new NodoPlanta(nueva);
+	}
+	if (nueva.precio < raiz->dato.precio) {
+		raiz->izquierdo = insertarPlanta(raiz->izquierdo, nueva);
+	}
+	else if(nueva.precio>raiz->dato.precio){
+		raiz->derecho = insertarPlanta(raiz->derecho, nueva);
+	}
+	else {
+		//Si tienen el mismo precio, se desempata con el ID
+		if (nueva.id < raiz->dato.id) {
+			raiz->izquierdo = insertarPlanta(raiz->izquierdo, nueva);
+		}
+		else {
+			raiz->derecho = insertarPlanta(raiz->derecho, nueva);
+		}
+	}
+	return raiz;
+}
+
+NodoPlanta* encontrarMinimoPlanta(NodoPlanta* raiz) {
+	while (raiz && raiz->izquierdo) raiz = raiz->izquierdo;
+	return raiz;
+}
+
+NodoPlanta* eliminarPlanta(NodoPlanta* raiz, float precio, int idDesempate = -1) {
+	if (!raiz) return nullptr;
+	if (precio < raiz->dato.precio) {
+		raiz->izquierdo = eliminarPlanta(raiz->izquierdo, precio, idDesempate);
+	}
+	else if (precio > raiz->dato.precio) {
+		raiz->derecho = eliminarPlanta(raiz->derecho, precio, idDesempate);
+	}
+	else {
+		if (idDesempate != -1 && raiz->dato.id != idDesempate) {
+			raiz->derecho = eliminarPlanta(raiz->derecho, precio, idDesempate);
+			return raiz;
+		}
+
+		if (!raiz->izquierdo && !raiz->derecho) {
+			delete raiz;
+			return nullptr;
+		}
+		if (!raiz->izquierdo) {
+			NodoPlanta* tmp = raiz->derecho;
+			delete raiz;
+			return tmp;
+		}
+	}
+}
+
+//FIN FUNCIONES ABB
 struct NodoCliente {//Estructura de nodos para la cola
 	Cliente dato;
 	NodoCliente* siguiente;
@@ -220,13 +283,14 @@ void menuPrincipal() {
 		case 2: ColaClientes(); break;
 		case 3: ProveedoresLocales(); break;
 		case 4: ProveedoresInternacionales(); break;
+		case 5: ListaCircularProveedor(); break;
 		case 6: ListaCircularProveedor(); break;
 			SetConsoleTextAttribute(hConsole, 2);
 			gotoxy(25, 20); cout << "Saliendo del sistema, gracias por visitarnos." << endl;
 			break;
 		}
 
-	} while (opcion != 4);
+	} while (opcion != 6);
 }
 void PilaPlantas() {
 	int op;
