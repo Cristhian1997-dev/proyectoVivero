@@ -69,13 +69,20 @@ NodoPlanta* insertarPlanta(NodoPlanta* raiz, const Planta& nueva) {
 	return raiz;
 }
 
+//Funcion para encontrar el nodo con el valor minimo
 NodoPlanta* encontrarMinimoPlanta(NodoPlanta* raiz) {
 	while (raiz && raiz->izquierdo) raiz = raiz->izquierdo;
 	return raiz;
 }
 
+//Funcion para los casos de eliminacion del ABB, se puede usar el precio como clave principal y el ID para desempatar en caso de precios iguales
 NodoPlanta* eliminarPlanta(NodoPlanta* raiz, float precio, int idDesempate = -1) {
-	if (!raiz) return nullptr;
+	if (!raiz) {
+		cout << "Planta no encontrada para eliminar." << endl;
+		system("pause");
+		return nullptr;
+	}
+	//BUSCAR NODO
 	if (precio < raiz->dato.precio) {
 		raiz->izquierdo = eliminarPlanta(raiz->izquierdo, precio, idDesempate);
 	}
@@ -83,23 +90,222 @@ NodoPlanta* eliminarPlanta(NodoPlanta* raiz, float precio, int idDesempate = -1)
 		raiz->derecho = eliminarPlanta(raiz->derecho, precio, idDesempate);
 	}
 	else {
-		if (idDesempate != -1 && raiz->dato.id != idDesempate) {
+		if (idDesempate != -1 && raiz->dato.id != idDesempate) {//caso 1: mismo precio pero diferente ID, seguimos buscando
 			raiz->derecho = eliminarPlanta(raiz->derecho, precio, idDesempate);
 			return raiz;
 		}
 
-		if (!raiz->izquierdo && !raiz->derecho) {
+		if (!raiz->izquierdo && !raiz->derecho) {//caso 2: nodo hoja (sin hijos)
 			delete raiz;
 			return nullptr;
 		}
-		if (!raiz->izquierdo) {
+		if (!raiz->izquierdo) {//caso 3: solo hijo derecho
 			NodoPlanta* tmp = raiz->derecho;
 			delete raiz;
 			return tmp;
 		}
+		if (!raiz->derecho) {//caso 4: solo hijo izquierdo
+			NodoPlanta* tmp = raiz->izquierdo;
+			delete raiz;
+			return tmp;
+		}
+		//Caso 5: La raiz tiene dos hijos
+		NodoPlanta* sucesor = encontrarMinimoPlanta(raiz->derecho);
+		raiz->dato = sucesor->dato;
+		raiz->derecho = eliminarPlanta(raiz->derecho, sucesor->dato.precio, sucesor->dato.id);
 	}
 }
 
+//Funcion para eliminar una planta en el ABB, esta es la que se llama en el menu principal
+void eliminarPlantaABB(NodoPlanta*& raiz) {
+	system("cls");
+	float precioBuscado;
+	int idDesempate = -1;
+	SetConsoleTextAttribute(hConsole, 9);
+	gotoxy(25, 3); cout << "--- ELIMINAR PLANTA EN ARBOL ABB ---" << endl;
+	gotoxy(25, 5); cout << "Ingrese el precio de la planta a eliminar: ";
+	while (!(cin >> precioBuscado)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permiten numeros." << endl;
+		cin.clear();
+		cin.ignore(1000, '\n');
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 5); cout << "Ingrese el precio de la planta a eliminar: ";
+	}
+	raiz = eliminarPlanta(raiz, precioBuscado, idDesempate);
+}
+
+//Funciones para recorrer el arbol ABB
+void ingresarPlantaenArbol(NodoPlanta*& arbol) {
+	system("cls");
+	Planta nueva;
+
+	SetConsoleTextAttribute(hConsole, 9);
+	gotoxy(25, 3); cout << "--- INGRESAR NUEVA PLANTA AL ARBOL ---";
+	gotoxy(25, 5); cout << "Ingrese ID: ";
+	while (!(cin >> nueva.id)) {
+		system("cls");
+		gotoxy(25, 3); cout << "--- INGRESAR NUEVA PLANTA AL ARBOL ---";
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4);cout << "Entrada invalida. Solo se permiten numeros." << endl;
+		cin.clear();
+		cin.ignore(1000, '\n');
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 5); cout << "Ingrese ID: ";
+	}
+
+	cin.ignore();
+	gotoxy(25, 6); cout << "Ingrese Nombre: "; getline(cin, nueva.nombre);
+	gotoxy(25, 7); cout << "Ingrese Tipo: "; getline(cin, nueva.tipo);
+	gotoxy(25, 8); cout << "Ingrese Color: "; getline(cin, nueva.color);
+	gotoxy(25, 9); cout << "Ingrese Precio: ";
+	while (!(cin >> nueva.precio)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permiten numeros." << endl;
+		cin.clear();
+		cin.ignore(1000, '\n');
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 9); cout << "Ingrese Precio: ";
+	}
+	gotoxy(25, 10); cout << "Ingrese Cantidad: ";
+	while (!(cin >> nueva.cantidad)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permiten numeros." << endl;
+		cin.clear();
+		cin.ignore(1000, '\n');
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 10); cout << "Ingrese Cantidad: ";
+	}
+
+	//Insertamos al arbol usando insertarPlanta, que se encarga de mantener el orden del ABB
+	arbol = insertarPlanta(arbol, nueva);
+}
+
+void inordenPlanta(NodoPlanta* raiz) {
+	system("cls");
+	if (raiz == nullptr) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 5); cout << "No hay plantas registradas." << endl;
+		return;
+	}
+	// Solo hacer la recursión si NO es nullptr
+	if (raiz->izquierdo != nullptr) inordenPlanta(raiz->izquierdo);
+
+	SetConsoleTextAttribute(hConsole, 9);
+	cout << "ID: " << raiz->dato.id << ", Nombre: "
+		<< raiz->dato.nombre << ", Precio: Q" << raiz->dato.precio
+		<< ", Direccion: " << raiz << endl;
+
+	if (raiz->derecho != nullptr) inordenPlanta(raiz->derecho);
+}
+
+void postordenPlanta(NodoPlanta* raiz) {
+	system("cls");
+	if (raiz == nullptr) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 5); cout << "No hay plantas registradas." << endl;
+		return;
+	}
+	//Recursion primero en izquierda
+	if (raiz->izquierdo != nullptr) postordenPlanta(raiz->izquierdo);
+	//Recursion luego en derecha
+	if (raiz->derecho != nullptr) postordenPlanta(raiz->derecho);
+	//Impresion de datos
+	SetConsoleTextAttribute(hConsole, 9);
+	cout << "ID: " << raiz->dato.id << ", Nombre: "
+		<< raiz->dato.nombre << ", Precio: Q" << raiz->dato.precio
+		<< ", Direccion: " << raiz << endl;
+}
+
+void preordenPlanta(NodoPlanta* raiz) {
+	system("cls");
+	if (raiz == nullptr) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 5); cout << "No hay plantas registradas." << endl;
+		return;
+	}
+	//Impresion de la raiz primero
+	SetConsoleTextAttribute(hConsole, 9);
+	cout << "ID: " << raiz->dato.id << ", Nombre: "
+		<< raiz->dato.nombre << ", Precio: Q" << raiz->dato.precio
+		<< ", Direccion: " << raiz << endl;
+
+	//Recursion luego en izquierda
+	if(raiz->izquierdo!=nullptr) preordenPlanta(raiz->izquierdo);
+	//Recursion luego en derecha
+	if(raiz->derecho!=nullptr) preordenPlanta(raiz->derecho);
+
+}
+
+void destruirArbol(NodoPlanta*& raiz) {//Funcion para liberar memoria del arbol
+	if (raiz == nullptr) return;
+	
+		destruirArbol(raiz->izquierdo);
+		destruirArbol(raiz->derecho);
+		delete raiz;
+		raiz = nullptr;
+	
+}
+//Contar nodos del arbol
+int contarNodos(NodoPlanta* raiz) {
+	if (raiz == nullptr) return 0;
+	return 1 + contarNodos(raiz->izquierdo) + contarNodos(raiz->derecho);
+}
+
+//Funcion auxiliar para buscar planta por precio
+NodoPlanta* buscarPlantaPorPrecio(NodoPlanta* raiz, float precio) {
+	if (raiz == nullptr) return nullptr;
+	if (raiz->dato.precio == precio) return raiz;
+	NodoPlanta* encontrado = buscarPlantaPorPrecio(raiz->izquierdo, precio);
+	if (encontrado) return encontrado;
+	return buscarPlantaPorPrecio(raiz->derecho, precio);
+}
+
+void buscarPlantaABB(NodoPlanta* raiz) {
+	system("cls");
+	float precioBuscado;
+	SetConsoleTextAttribute(hConsole, 9);
+	gotoxy(25, 3); cout << "--- BUSCAR PLANTA POR PRECIO EN ARBOL ABB ---" << endl;
+	gotoxy(25, 5); cout << "Ingrese el precio de la planta: ";
+	while (!(cin >> precioBuscado)) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, 4); cout << "Entrada invalida. Solo se permiten numeros." << endl;
+		cin.clear();
+		cin.ignore(1000, '\n');
+		SetConsoleTextAttribute(hConsole, 9);
+		gotoxy(25, 5); cout << "Ingrese el precio de la planta: ";
+	}
+	NodoPlanta* encontrado = buscarPlantaPorPrecio(raiz, precioBuscado);
+	int y = 6;
+	if (encontrado == nullptr) {
+		SetConsoleTextAttribute(hConsole, 4);
+		gotoxy(25, y++); cout << "No se encontro ninguna planta con ese precio." << endl;
+	}
+	else {
+		SetConsoleTextAttribute(hConsole, 2);
+		gotoxy(25, y++); cout << "Planta encontrada:" << endl;
+		gotoxy(25, y++); cout << "ID: " << encontrado->dato.id << endl;
+		gotoxy(25, y++); cout << "Nombre: " << encontrado->dato.nombre << endl;
+		gotoxy(25, y++); cout << "Tipo: " << encontrado->dato.tipo << endl;
+		gotoxy(25, y++); cout << "Color: " << encontrado->dato.color << endl;
+		gotoxy(25, y++); cout << "Precio: " << encontrado->dato.precio << endl;
+		gotoxy(25, y++); cout << "Cantidad: " << encontrado->dato.cantidad << endl;
+	}
+}
+
+//Funcion puente: pila -> arbol ABB
+NodoPlanta* crearArbolDesdePila(NodoPlanta* cimaPila) {
+	NodoPlanta* raiz = nullptr; //Arbol vacio inicialmente
+	NodoPlanta* aux = cimaPila; //Puntero auxiliar para recorrer la pila
+
+	//Recorrer la pila y agregar cada planta al arbol usando la funcion insertarPlanta, que mantiene el orden del ABB
+	while (aux != nullptr) {
+		raiz = insertarPlanta(raiz, aux->dato);
+		aux = aux->siguiente;
+	}
+	return raiz; //Retorna la raiz del arbol creado a partir de la pila
+}
+ 
 //FIN FUNCIONES ABB
 struct NodoCliente {//Estructura de nodos para la cola
 	Cliente dato;
@@ -152,6 +358,7 @@ struct NodoProveedor
 
 //Variables globales 
 NodoPlanta* cima = NULL; //PILA
+NodoPlanta* arbolPlanta = NULL; //Raiz del arbol ABB
 Cola cola; //Cola global para manejar los clientes
 NodoProveedor* inicioCircular = NULL;
 NodoProveedor* finCircular = NULL;
@@ -161,6 +368,7 @@ NodoDoble* cabezaDoble = NULL; //Lista doblemente enlazada exportadores
 
 
 //Prototipos de funciones
+void menuArbolABB();
 void menuPrincipal();
 void PilaPlantas();
 void ColaClientes();
@@ -301,12 +509,13 @@ void PilaPlantas() {
 		"3. Modificar una planta.",
 		"4. Buscar una planta.",
 		"5. Eliminar una planta.",
-		"6. Regresar al menu principal."
+		"6. Submenu de arbol ABB.",
+		"7. Regresar al menu principal."
 	};
 
 	do
 	{
-		op = menuConFlecha(opciones, 6, "MODULO DE PLANTAS - PILA", 3);
+		op = menuConFlecha(opciones, 7, "MODULO DE PLANTAS - PILA", 3);
 
 		switch (op) {
 		case 1:	ingresarPlanta(); system("pause"); break;
@@ -314,10 +523,11 @@ void PilaPlantas() {
 		case 3:	modificarPlanta(); system("pause");	break;
 		case 4:	buscarPlanta();	system("pause"); break;
 		case 5:	eliminarPlanta(); system("pause"); break;
-		case 6:	break;
+		case 6:	menuArbolABB(); system("pause"); break;
+		case 7:	break;
 		}
 
-	} while (op != 6);
+	} while (op != 7);
 }
 void ColaClientes() {
 	int op;
@@ -463,7 +673,7 @@ NodoPlanta* buscarPlantaPorId(int id) {
 	return NULL;
 }
 void ingresarPlanta() {
-	system("cls");
+	system:("cls");
 	NodoPlanta* nuevo = new NodoPlanta;
 
 	SetConsoleTextAttribute(hConsole, 9);
@@ -1443,6 +1653,69 @@ void eliminarProveedor() {
 		gotoxy(25, 7); cout << "Proveedor no encontrado.";
 	}
 	cout << "\n\n";
+}
+
+//Submenu del arbol ABB
+void menuArbolABB() {
+	NodoPlanta* arbol = crearArbolDesdePila(cima);
+	int totalNodos = contarNodos(arbol);
+	int op;
+	string opciones[] = {
+		"1. Ingresar Planta",
+		"2. Ver Plantas (InOrden)",
+		"3. Ver Plantas (PreOrden)",
+		"4. Ver Plantas (PostOrden)",
+		"5. Buscar Planta por precio",
+		"6. Eliminar Planta por precio",
+		"7. Eliminar todo el arbol",
+		"8. Mostrar grafico del arbol (FTXUI)",
+		"9. Volver al menu anterior"
+	};
+
+	do {
+		op = menuConFlecha(opciones, 9, "MENU DE PLANTAS (ABB)", 3);
+		switch (op) {
+		case 1:
+			// Insertar nueva planta en el árbol. La función ingresarPlantaenArbol
+			ingresarPlantaenArbol(arbolPlanta);
+			break;
+		case 2:
+			inordenPlanta(arbolPlanta); system("pause"); break;
+		case 3:
+			preordenPlanta(arbolPlanta);system("pause"); break;
+		case 4:
+			postordenPlanta(arbolPlanta); system("pause"); break;
+		case 5:
+			buscarPlantaABB(arbolPlanta);system("pause"); break;
+		case 6:
+			eliminarPlantaABB(arbolPlanta);
+			system("pause");
+			break;
+		case 7:
+			if (arbolPlanta != nullptr) {
+				destruirArbol(arbolPlanta);
+				arbolPlanta = nullptr;
+				SetConsoleTextAttribute(hConsole, 2);
+				gotoxy(25, 5); cout << "Arbol liberado correctamente." << endl;
+
+			}
+			else {
+				SetConsoleTextAttribute(hConsole, 4);
+				gotoxy(25, 5); cout << "El arbol ya esta vacio." << endl;
+			}
+			system("pause");
+			break;
+		case 8:
+			system("pause");
+			break;
+		case 9:
+			break;
+		default:
+			cout << "Opcion no valida" << endl;
+			system("pause");
+			break;
+		}
+	} while (op != 9);
 }
 
 bool login(string nombre, string contra) {
