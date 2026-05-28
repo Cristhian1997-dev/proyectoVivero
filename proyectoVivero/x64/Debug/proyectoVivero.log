@@ -1,2 +1,6 @@
 ﻿  proyectoVivero.cpp
+C:\Users\usuario\Documents\Archivos UMG\05 Pensum quinto semestre 2026\Programacion III\nana-master\proyectoVivero\proyectoVivero.cpp(676,2): warning C4102: 'system': etiqueta sin referencia
+C:\Users\usuario\Documents\Archivos UMG\05 Pensum quinto semestre 2026\Programacion III\nana-master\proyectoVivero\proyectoVivero.cpp(117,1): warning C4715: 'eliminarPlanta': no todas las rutas de acceso de control devuelven un valor
   proyectoVivero.vcxproj -> C:\Users\usuario\Documents\Archivos UMG\05 Pensum quinto semestre 2026\Programacion III\nana-master\proyectoVivero\x64\Debug\proyectoVivero.exe
+  "pwsh.exe" no se reconoce como un comando interno o externo,
+  programa o archivo por lotes ejecutable.
