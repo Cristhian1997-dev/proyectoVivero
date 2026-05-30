@@ -1,12 +1,46 @@
-﻿#include <cstdlib>
+#include <cstdlib>
 #include <iostream>
-#include <windows.h>
+#include <string>
+
+#include <ftxui/component/component.hpp>
+#include <ftxui/component/event.hpp>
+#include <ftxui/component/screen_interactive.hpp>
+#include <ftxui/dom/elements.hpp>
+#include <ftxui/screen/screen.hpp>
 
 #include "consola.h"
 #include "globales.h"
 #include "proveedores_locales.h"
 
+using namespace ftxui;
 using namespace std;
+
+static bool convertirEntero(const string& texto, int& valor) {
+	try {
+		size_t pos = 0;
+		valor = stoi(texto, &pos);
+		return pos == texto.size();
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+static void mostrarMensajeLocal(const string& titulo,
+	const string& mensaje,
+	Color colorMensaje) {
+	Element doc = vbox({
+		text(titulo) | bold | color(Color::Yellow),
+		separator(),
+		text(mensaje) | color(colorMensaje),
+		}) | border;
+
+	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));
+	Render(pantalla, doc);
+	pantalla.Print();
+	cout << endl;
+}
+
 NodoSimple* crearNodoProveedorLocal(Proveedor prov) {
 	NodoSimple* nuevo = new NodoSimple;
 	nuevo->dato = prov;
@@ -26,91 +60,151 @@ NodoSimple* buscarProveedorLocalPorId(NodoSimple* cabeza, int id) {
 void ingresarProveedorLocalAlInicio(NodoSimple*& cabeza) {
 	//Codigo para ingresar proveedores locales
 	::system("cls");
-	Proveedor nuevoProv;//Variable temporal para almacenar los datos del nuevo proveedor
-	SetConsoleTextAttribute(hConsole, 9);
-	gotoxy(25, 3); cout << "---- INGRESAR UN NUEVO PROVEEDOR LOCAL ----" << endl;
-	gotoxy(25, 5); cout << "Ingrese ID: ";
-	while (!(cin >> nuevoProv.id)) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
-		cin.clear();
-		cin.ignore();
-		SetConsoleTextAttribute(hConsole, 9);
-		gotoxy(25, 5); cout << "Ingresa ID: ";
+
+	string idTexto, nombre, tipo, telefonoTexto, contacto, error;
+	int id = 0, telefono = 0;
+
+	while (true) {
+		auto inputId = Input(&idTexto, "ID");
+		auto inputNombre = Input(&nombre, "Nombre");
+		auto inputTipo = Input(&tipo, "Tipo");
+		auto inputTelefono = Input(&telefonoTexto, "Telefono");
+		auto inputContacto = Input(&contacto, "Contacto");
+
+		auto contenedor = Container::Vertical({
+			inputId, inputNombre, inputTipo, inputTelefono, inputContacto
+			});
+
+		auto pantalla = ScreenInteractive::TerminalOutput();
+		auto componente = Renderer(contenedor, [&] {
+			Elements filas = {
+				text("---- INGRESAR UN NUEVO PROVEEDOR LOCAL ----") | bold | color(Color::Yellow),
+				separator(),
+				hbox(text("ID:        "), inputId->Render()),
+				hbox(text("Nombre:    "), inputNombre->Render()),
+				hbox(text("Tipo:      "), inputTipo->Render()),
+				hbox(text("Telefono:  "), inputTelefono->Render()),
+				hbox(text("Contacto:  "), inputContacto->Render()),
+				separator(),
+				text("Use Tab para moverse y Enter para guardar."),
+			};
+			if (!error.empty())
+				filas.push_back(text(error) | color(Color::Red));
+			return vbox(filas) | border;
+			});
+
+		componente = CatchEvent(componente, [&](Event e) {
+			if (e == Event::Return) { pantalla.ExitLoopClosure()(); return true; }
+			return false;
+			});
+
+		pantalla.Loop(componente);
+
+		if (!convertirEntero(idTexto, id)) {
+			::system("cls");
+			error = "Entrada invalida. El ID debe ser numerico.";
+			continue;
+		}
+		if (!convertirEntero(telefonoTexto, telefono)) {
+			::system("cls");
+			error = "Entrada invalida. El telefono debe ser numerico.";
+			continue;
+		}
+		break;
 	}
 
 	//Verificar que no exista un proveedor con el mismo ID
-	if (buscarProveedorLocalPorId(cabeza, nuevoProv.id) != NULL) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 6); cout << "Ya existe un proveedor con ese ID." << endl;
+	if (buscarProveedorLocalPorId(cabeza, id) != NULL) {
+		::system("cls");
+		mostrarMensajeLocal("---- INGRESAR UN NUEVO PROVEEDOR LOCAL ----", "Ya existe un proveedor con ese ID.", Color::Red);
 		return;
 	}
 
-	cin.ignore();
-	gotoxy(25, 6); cout << "Ingrese Nombre: ";
-	getline(cin, nuevoProv.nombre);
-
-	gotoxy(25, 7); cout << "Ingrese Tipo: ";
-	getline(cin, nuevoProv.tipo);
-
-	gotoxy(25, 8); cout << "Ingrese Telefono: ";
-	while (!(cin >> nuevoProv.telefono)) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 4); cout << "Entrada invalida. Solo se permiten numeros." << endl;
-		cin.clear();
-		cin.ignore();
-		SetConsoleTextAttribute(hConsole, 9);
-		gotoxy(25, 8); cout << "Ingrese Telefono: ";
-	}
-
-	cin.ignore();
-	gotoxy(25, 9); cout << "Ingrese Contacto: ";
-	getline(cin, nuevoProv.contacto);
+	Proveedor nuevoProv; //Variable temporal para almacenar los datos del nuevo proveedor
+	nuevoProv.id = id;
+	nuevoProv.nombre = nombre;
+	nuevoProv.tipo = tipo;
+	nuevoProv.telefono = telefono;
+	nuevoProv.contacto = contacto;
 
 	NodoSimple* nuevo = crearNodoProveedorLocal(nuevoProv);
 	nuevo->siguiente = cabeza;
 	cabeza = nuevo;
-	gotoxy(25, 13); cout << "Proveedor local agregado correctamente." << endl;
+
+	::system("cls");
+	mostrarMensajeLocal("---- INGRESAR UN NUEVO PROVEEDOR LOCAL ----", "Proveedor local agregado correctamente.", Color::Green);
 }
+
 void ingresarProveedorLocalAlFinal(NodoSimple*& cabeza) {
 	//Codigo para ingresar proveedores locales al final de la lista
 	::system("cls");
-	Proveedor nuevoProv;//Variable temporal para almacenar los datos del nuevo proveedor
-	SetConsoleTextAttribute(hConsole, 9);
-	gotoxy(25, 3); cout << "---- INGRESAR UN NUEVO PROVEEDOR LOCAL ----" << endl;
-	gotoxy(25, 5); cout << "Ingrese ID: ";
-	while (!(cin >> nuevoProv.id)) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
-		cin.clear();
-		cin.ignore();
-		SetConsoleTextAttribute(hConsole, 9);
-		gotoxy(25, 5); cout << "Ingresa ID: ";
+
+	string idTexto, nombre, tipo, telefonoTexto, contacto, error;
+	int id = 0, telefono;
+
+	while (true) {
+		auto inputId = Input(&idTexto, "ID");
+		auto inputNombre = Input(&nombre, "Nombre");
+		auto inputTipo = Input(&tipo, "Tipo");
+		auto inputTelefono = Input(&telefonoTexto, "Telefono");
+		auto inputContacto = Input(&contacto, "Contacto");
+
+		auto contenedor = Container::Vertical({
+			inputId, inputNombre, inputTipo, inputTelefono, inputContacto
+			});
+
+		auto pantalla = ScreenInteractive::TerminalOutput();
+		auto componente = Renderer(contenedor, [&] {
+			Elements filas = {
+				text("---- INGRESAR UN NUEVO PROVEEDOR LOCAL ----") | bold | color(Color::Yellow),
+				separator(),
+				hbox(text("ID:        "), inputId->Render()),
+				hbox(text("Nombre:    "), inputNombre->Render()),
+				hbox(text("Tipo:      "), inputTipo->Render()),
+				hbox(text("Telefono:  "), inputTelefono->Render()),
+				hbox(text("Contacto:  "), inputContacto->Render()),
+				separator(),
+				text("Use Tab para moverse y Enter para guardar."),
+			};
+			if (!error.empty())
+				filas.push_back(text(error) | color(Color::Red));
+			return vbox(filas) | border;
+			});
+
+		componente = CatchEvent(componente, [&](Event e) {
+			if (e == Event::Return) { pantalla.ExitLoopClosure()(); return true; }
+			return false;
+			});
+
+		pantalla.Loop(componente);
+
+		if (!convertirEntero(idTexto, id)) {
+			::system("cls");
+			error = "Entrada invalida. El ID debe ser numerico.";
+			continue;
+		}
+		if (!convertirEntero(telefonoTexto, telefono)) {
+			::system("cls");
+			error = "Entrada invalida. El telefono debe ser numerico.";
+			continue;
+		}
+		break;
 	}
 
+
 	//Verificar que no exista un proveedor con el mismo ID
-	if (buscarProveedorLocalPorId(cabeza, nuevoProv.id) != NULL) {
-		gotoxy(25, 6); cout << "Ya existe un proveedor con ese ID." << endl;
+	if (buscarProveedorLocalPorId(cabeza, id) != NULL) {
+		::system("cls");
+		mostrarMensajeLocal("---- INGRESAR UN NUEVO PROVEEDOR LOCAL ----", "Ya existe un proveedor con ese ID.", Color::Red);
 		return;
 	}
 
-	cin.ignore();
-	gotoxy(25, 6); cout << "Ingrese Nombre: "; getline(cin, nuevoProv.nombre);
-
-	gotoxy(25, 7); cout << "Ingrese Tipo: "; getline(cin, nuevoProv.tipo);
-
-	gotoxy(25, 8); cout << "Ingrese Telefono: ";
-	while (!(cin >> nuevoProv.telefono)) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 4); cout << "Entrada invalida. Solo se permiten numeros." << endl;
-		cin.clear();
-		cin.ignore();
-		SetConsoleTextAttribute(hConsole, 9);
-		gotoxy(25, 8); cout << "Ingrese Telefono: ";
-	}
-
-	cin.ignore();
-	gotoxy(25, 9); cout << "Ingrese Contacto: "; getline(cin, nuevoProv.contacto);
+	Proveedor nuevoProv;//Variable temporal para almacenar los datos del nuevo proveedor
+	nuevoProv.id = id;
+	nuevoProv.nombre = nombre;
+	nuevoProv.tipo = tipo;
+	nuevoProv.telefono = telefono;
+	nuevoProv.contacto = contacto;
 
 	NodoSimple* nuevo = crearNodoProveedorLocal(nuevoProv);
 	if (cabeza == NULL) {
@@ -126,101 +220,253 @@ void ingresarProveedorLocalAlFinal(NodoSimple*& cabeza) {
 		aux->siguiente = nuevo;
 	}
 
-	gotoxy(25, 9); cout << "Proveedor local agregado correctamente al final de la lista." << endl;
+	::system("cls");
+	mostrarMensajeLocal("---- INGRESAR UN NUEVO PROVEEDOR LOCAL ----", "Proveedor local agregado al final correctamente.", Color::Green);
 }
+
 void buscarProveedorLocal(NodoSimple* cabeza) {
 	//Codigo para buscar proveedores locales
 	::system("cls");
-	int idBuscado;
-	SetConsoleTextAttribute(hConsole, 9);
-	gotoxy(25, 3); cout << "---- BUSCAR PROVEEDOR LOCAL ----" << endl;
-	gotoxy(25, 5); cout << "Ingrese el ID del proveedor local: ";
-	cin >> idBuscado;
+
+	string idTexto, error;
+	int idBuscado = 0;
+
+	while (true) {
+		auto inputId = Input(&idTexto, "ID");
+		auto pantalla = ScreenInteractive::TerminalOutput();
+		auto componente = Renderer(inputId, [&] {
+			Elements filas = {
+				text("---- BUSCAR PROVEEDOR LOCAL ----") | bold | color(Color::Yellow),
+				separator(),
+				hbox(text("ID del proveedor: "), inputId->Render()),
+				separator(),
+				text("Presione Enter para buscar."),
+			};
+			if (!error.empty())
+				filas.push_back(text(error) | color(Color::Red));
+			return vbox(filas) | border;
+			});
+
+		componente = CatchEvent(componente, [&](Event e) {
+			if (e == Event::Return) { pantalla.ExitLoopClosure()(); return true; }
+			return false;
+			});
+
+		pantalla.Loop(componente);
+
+		if (!convertirEntero(idTexto, idBuscado)) {
+			::system("cls");
+			error = "Entrada invalida. El ID debe ser numerico.";
+			continue;
+		}
+		break;
+	}
 	NodoSimple* aux = buscarProveedorLocalPorId(cabeza, idBuscado);
+	::system("cls");
 
 	if (aux == NULL) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 6); cout << "No se encontro el proveedor local." << endl;
+		mostrarMensajeLocal("---- BUSCAR PROVEEDOR LOCAL ----", "No se encontro el proveedor.", Color::Red);
+		return;
 	}
-	else {
-		SetConsoleTextAttribute(hConsole, 2);
-		gotoxy(25, 6); cout << "\nProveedor local encontrado:" << endl;
-		gotoxy(25, 7); cout << "ID: " << aux->dato.id << endl;
-		gotoxy(25, 8); cout << "Nombre: " << aux->dato.nombre << endl;
-		gotoxy(25, 9); cout << "Tipo: " << aux->dato.tipo << endl;
-		gotoxy(25, 10); cout << "Telefono: " << aux->dato.telefono << endl;
-		gotoxy(25, 11); cout << "Contacto: " << aux->dato.contacto << endl;
-	}
+
+	Element doc = vbox({
+		text("--- PROVEEDOR ENCONTRADO ---") | bold | color(Color::Yellow),
+		separator(),
+		text("ID:       " + to_string(aux->dato.id)),
+		text("Nombre:   " + aux->dato.nombre),
+		text("Tipo:     " + aux->dato.tipo),
+		text("Telefono: " + to_string(aux->dato.telefono)),
+		text("Contacto: " + aux->dato.contacto),
+		}) | border;
+
+	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));
+	Render(pantalla, doc);
+	pantalla.Print();
+	cout << endl;
 }
+
 void verProveedoresLocales(NodoSimple*& cabeza) {
 	//Codigo para ver proveedores locales
 	::system("cls");
-	NodoSimple* aux = cabeza;
-	if (aux == NULL) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 5); cout << "No hay proveedores locales registrados." << endl;
-		return;
-	}
 
-	SetConsoleTextAttribute(hConsole, 2);
-	gotoxy(25, 3); cout << "---- PROVEEDORES LOCALES ----" << endl;
-	while (aux != NULL) {
-		gotoxy(25, 5); cout << "ID: " << aux->dato.id << endl;
-		gotoxy(25, 6); cout << "Nombre: " << aux->dato.nombre << endl;
-		gotoxy(25, 7); cout << "Tipo: " << aux->dato.tipo << endl;
-		gotoxy(25, 8); cout << "Telefono: " << aux->dato.telefono << endl;
-		gotoxy(25, 9); cout << "Contacto: " << aux->dato.contacto << endl;
-		gotoxy(25, 10); cout << "------------------------" << endl;
-		aux = aux->siguiente;
+	Elements filas;
+	filas.push_back(text("---- PROVEEDORES LOCALES ----") | bold | color(Color::Yellow));
+	filas.push_back(separator());
+
+	if (cabeza == NULL) {
+		filas.push_back(text("No hay proveedores locales registrados.") | color(Color::Red));
 	}
+	else {
+		NodoSimple* aux = cabeza;
+		while (aux != NULL) {
+			filas.push_back(vbox({
+				text("ID:       " + to_string(aux->dato.id)),
+				text("Nombre:   " + aux->dato.nombre),
+				text("Tipo:     " + aux->dato.tipo),
+				text("Telefono: " + to_string(aux->dato.telefono)),
+				text("Contacto: " + aux->dato.contacto),
+				}) | border);
+			aux = aux->siguiente;
+		}
+	}
+	Element doc = vbox(filas) | border;
+	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));
+	Render(pantalla, doc);
+	pantalla.Print();
+	cout << endl;
+
 }
+
 void modificarProveedorLocal(NodoSimple*& cabeza) {
 	//Codigo para modificar proveedores locales
 	::system("cls");
-	int idBuscado;
-	SetConsoleTextAttribute(hConsole, 9);
-	gotoxy(25, 3); cout << "---- MODIFICAR PROVEEDOR LOCAL ----" << endl;
-	gotoxy(25, 5); cout << "Ingrese el ID del proveedor local a modificar: ";
-	cin >> idBuscado;
+
+	string idTexto, error;
+	int idBuscado = 0;
+
+	while (true) {
+		auto inputId = Input(&idTexto, "ID");
+		auto pantalla = ScreenInteractive::TerminalOutput();
+		auto componente = Renderer(inputId, [&] {
+			Elements filas = {
+				text("---- MODIFICAR PROVEEDOR LOCAL ----") | bold | color(Color::Yellow),
+				separator(),
+				hbox(text("ID del proveedor: "), inputId->Render()),
+				separator(),
+				text("Presione Enter para buscar."),
+			};
+			if (!error.empty())
+				filas.push_back(text(error) | color(Color::Red));
+			return vbox(filas) | border;
+			});
+
+		componente = CatchEvent(componente, [&](Event e) {
+			if (e == Event::Return) { pantalla.ExitLoopClosure()(); return true; }
+			return false;
+			});
+
+		pantalla.Loop(componente);
+
+		if (!convertirEntero(idTexto, idBuscado)) {
+			::system("cls");
+			error = "Entrada invalida. El ID debe ser numerico.";
+			continue;
+		}
+		break;
+	}
+
 	NodoSimple* aux = buscarProveedorLocalPorId(cabeza, idBuscado);
 	if (aux == NULL) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 7); cout << "No se encontro el proveedor." << endl;
+		::system("cls");
+		mostrarMensajeLocal("---- MODIFICAR PROVEEDOR LOCAL ----", "No se encontro el proveedor.", Color::Red);
 		return;
 	}
 
-	cin.ignore();
-	gotoxy(25, 6); cout << "Nuevo nombre: ";
-	getline(cin, aux->dato.nombre);
-	gotoxy(25, 7); cout << "Nuevo tipo: ";
-	getline(cin, aux->dato.tipo);
-	gotoxy(25, 8); cout << "Nuevo telefono: ";
-	while (!(cin >> aux->dato.telefono)) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 4); cout << "Entrada invalida. Solo se permiten numeros." << endl;
-		cin.clear();
-		cin.ignore();
-		SetConsoleTextAttribute(hConsole, 9);
-		gotoxy(25, 8); cout << "Ingrese Telefono: ";
-	}
-	cin.ignore();
-	gotoxy(25, 9); cout << "Nuevo contacto: ";
-	getline(cin, aux->dato.contacto);
+	string nombre = aux->dato.nombre;
+	string tipo = aux->dato.tipo;
+	string telefonoTexto = to_string(aux->dato.telefono);
+	string contacto = aux->dato.contacto;
+	int telefono = aux->dato.telefono;
+	error.clear();
 
-	gotoxy(25, 12); cout << "Proveedor local modificado correctamente." << endl;
+	while (true) {
+		::system("cls");
+		auto inputNombre = Input(&nombre, "Nombre");
+		auto inputTipo = Input(&tipo, "Tipo");
+		auto inputTelefono = Input(&telefonoTexto, "Telefono");
+		auto inputContacto = Input(&contacto, "Contacto");
+
+		auto contenedor = Container::Vertical({
+			inputNombre, inputTipo, inputTelefono, inputContacto
+			});
+
+		auto pantalla = ScreenInteractive::TerminalOutput();
+		auto componente = Renderer(contenedor, [&] {
+			Elements filas = {
+				text("---- MODIFICAR PROVEEDOR LOCAL ----") | bold | color(Color::Yellow),
+				separator(),
+				text("ID: " + to_string(aux->dato.id)),
+				hbox(text("Nombre:    "), inputNombre->Render()),
+				hbox(text("Tipo:      "), inputTipo->Render()),
+				hbox(text("Telefono:  "), inputTelefono->Render()),
+				hbox(text("Contacto:  "), inputContacto->Render()),
+				separator(),
+				text("Use Tab para moverse y Enter para guardar."),
+			};
+			if (!error.empty())
+				filas.push_back(text(error) | color(Color::Red));
+			return vbox(filas) | border;
+			});
+
+		componente = CatchEvent(componente, [&](Event e) {
+			if (e == Event::Return) { pantalla.ExitLoopClosure()(); return true; }
+			return false;
+			});
+
+		pantalla.Loop(componente);
+
+		if (!convertirEntero(telefonoTexto, telefono)) {
+			::system("cls");
+			error = "Entrada invelida. El telefono debe ser numerico.";
+			continue;
+		}
+		break;
+	}
+
+	aux->dato.nombre = nombre;
+	aux->dato.tipo = tipo;
+	aux->dato.telefono = telefono;
+	aux->dato.contacto = contacto;
+
+	::system("cls");
+	mostrarMensajeLocal("---- MODIFICAR PROVEEDOR LOCAL ----", "Proveedor modificado correctamente.", Color::Green);
 }
+
 void eliminarProveedorLocal(NodoSimple*& cabeza) {
 	//Codigo para eliminar proveedores locales
 	::system("cls");
-	int idBuscado;
-	SetConsoleTextAttribute(hConsole, 4);
-	gotoxy(25, 3); cout << "---- ELIMINAR PROVEEDOR LOCAL ----" << endl;
-	gotoxy(25, 5); cout << "Ingrese el ID del proveedor local a eliminar: "; cin >> idBuscado;
+
+	string idTexto, error;
+	int idBuscado = 0;
+
+	while (true) {
+		auto inputId = Input(&idTexto, "ID");
+		auto pantalla = ScreenInteractive::TerminalOutput();
+		auto componente = Renderer(inputId, [&] {
+			Elements filas = {
+				text("---- ELIMINAR PROVEEDOR LOCAL ----") | bold | color(Color::Yellow),
+				separator(),
+				hbox(text("ID del proveedor: "), inputId->Render()),
+				separator(),
+				text("Presione Enter para eliminar."),
+			};
+			if (!error.empty())
+				filas.push_back(text(error) | color(Color::Red));
+			return vbox(filas) | border;
+			});
+
+		componente = CatchEvent(componente, [&](Event e) {
+			if (e == Event::Return) { pantalla.ExitLoopClosure()(); return true; }
+			return false;
+			});
+
+		pantalla.Loop(componente);
+
+		if (!convertirEntero(idTexto, idBuscado)) {
+			::system("cls");
+			error = "Entrada invalida. El ID debe ser numerico.";
+			continue;
+		}
+		break;
+	}
+
 	NodoSimple* aux = buscarProveedorLocalPorId(cabeza, idBuscado);
 	if (aux == NULL) {
-		gotoxy(25, 7); cout << "No se encontro el proveedor." << endl;
+		::system("cls");
+		mostrarMensajeLocal("---- ELIMINAR PROVEEDOR LOCAL ----", "No se encontro el proveedor.", Color::Red);
 		return;
 	}
+	Proveedor eliminado = aux->dato;
 	if (aux == cabeza) {//Si el nodo a eliminar es el primero de la lista
 		cabeza = cabeza->siguiente;//Movemos la cabeza al siguiente nodo
 	}
@@ -232,8 +478,26 @@ void eliminarProveedorLocal(NodoSimple*& cabeza) {
 		prev->siguiente = aux->siguiente;
 	}
 	delete aux;
-	gotoxy(25, 7); cout << "\nProveedor local eliminado correctamente." << endl;
+	::system("cls");
+
+	Element doc = vbox({
+		text("---- ELIMINAR PROVEEDOR LOCAL ----") | bold | color(Color::Yellow),
+		separator(),
+		text("Se elimino el siguiente proveedor:"),
+		separator(),
+		text("ID:       " + to_string(eliminado.id)),
+		text("Nombre:   " + eliminado.nombre),
+		text("Tipo:     " + eliminado.tipo),
+		text("Telefono: " + to_string(eliminado.telefono)),
+		text("Contacto: " + eliminado.contacto),
+		}) | border;
+
+	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));
+	Render(pantalla, doc);
+	pantalla.Print();
+	cout << endl;
 }
+
 void liberarListaSimple(NodoSimple*& cabeza) {
 	::system("cls");
 	//Codigo para liberar memoria de la lista simple
@@ -242,7 +506,7 @@ void liberarListaSimple(NodoSimple*& cabeza) {
 		cabeza = cabeza->siguiente;
 		delete aux;
 	}
-	gotoxy(25, 12); cout << "Memoria de la lista simple de proveedores locales liberada correctamente." << endl;
+	mostrarMensajeLocal("LISTA SIMPLE", "Memoria de la lista simple de proveedores locales liberada correctamente.", Color::Green);
 }
 
 //Funciones para la lista de proveedores internacionales (lista doblemente enlazada)

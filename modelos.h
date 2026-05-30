@@ -21,6 +21,11 @@ struct Cliente {
 struct NodoPlanta {
 	Planta dato;
 	NodoPlanta* siguiente;
+	NodoPlanta* izquierdo;
+	NodoPlanta* derecho;
+
+	NodoPlanta() : dato(), siguiente(NULL), izquierdo(NULL), derecho(NULL) {}
+	NodoPlanta(const Planta& planta) : dato(planta), siguiente(NULL), izquierdo(NULL), derecho(NULL) {}
 };
 
 struct NodoCliente {
@@ -78,3 +83,4 @@ struct NodoABB {
 	NodoABB* izquierda;
 	NodoABB* derecha;
 };
+

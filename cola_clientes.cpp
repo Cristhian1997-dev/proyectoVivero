@@ -1,12 +1,46 @@
 ﻿#include <cstdlib>
 #include <iostream>
-#include <windows.h>
+#include <String>
+
+#include <ftxui/component/component.hpp>
+#include <ftxui/component/event.hpp>
+#include <ftxui/component/screen_interactive.hpp>
+#include <ftxui/dom/elements.hpp>
+#include <ftxui/screen/screen.hpp>
 
 #include "cola_clientes.h"
 #include "consola.h"
 #include "globales.h"
 
+using namespace ftxui;
 using namespace std;
+
+static bool convertirEntero(const string& texto, int& valor) {
+	try {
+		size_t pos = 0;
+		valor = stoi(texto, &pos);
+		return pos == texto.size();
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+static void mostrarMensajeCola(const string& titulo,
+	const string& mensaje,
+	Color colorMensaje) {
+	Element doc = vbox({
+		text(titulo) | bold | color(Color::Cyan),
+		separator(),
+		text(mensaje) | color(colorMensaje),
+		}) | border;
+
+	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));
+	Render(pantalla, doc);
+	pantalla.Print();
+	cout << endl;
+}
+
 NodoCliente* buscarClientePorId(int id) {
 	NodoCliente* aux = cola.frente;
 
@@ -20,153 +54,313 @@ NodoCliente* buscarClientePorId(int id) {
 	return NULL;
 }
 void ingresarCliente() {
-	//Aqui va el cÃ³digo de ingresar colas
+	//Aqui va el codigo de ingresar colas
 	::system("cls");
-	NodoCliente* nuevo = new NodoCliente;
-	SetConsoleTextAttribute(hConsole, 9);
-	gotoxy(25, 3); cout << "---- INGRESAR UN NUEVO CLIENTE ----" << endl;
-	gotoxy(25, 5); cout << "Ingrese ID: ";
-	while (!(cin >> nuevo->dato.id)) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
-		cin.clear();
-		cin.ignore();
-		SetConsoleTextAttribute(hConsole, 9);
-		gotoxy(25, 5); cout << "Ingresa ID: ";
+
+	string idTexto, nombre, direccion, telefonoTexto, error;
+	int id = 0, telefono = 0;
+
+	while (true) {
+		auto inputId = Input(&idTexto, "ID");
+		auto inputNombre = Input(&nombre, "Nombre");
+		auto inputDireccion = Input(&direccion, "Direccion");
+		auto inputTelefono = Input(&telefonoTexto, "Telefono");
+
+		auto contenedor = Container::Vertical({
+			inputId, inputNombre, inputDireccion, inputTelefono
+			});
+
+		auto pantalla = ScreenInteractive::TerminalOutput();
+		auto componente = Renderer(contenedor, [&] {
+			Elements filas = {
+				text("---- INGRESAR UN NUEVO CLIENTE ----") | bold | color(Color::Cyan),
+				separator(),
+				hbox(text("ID:         "), inputId->Render()),
+				hbox(text("Nombre:     "), inputNombre->Render()),
+				hbox(text("Direccion:  "), inputDireccion->Render()),
+				hbox(text("Telefono:   "), inputTelefono->Render()),
+				separator(),
+				text("Use Tab para moverse y Enter para guardar."),
+			};
+			if (!error.empty())
+				filas.push_back(text(error) | color(Color::Red));
+			return vbox(filas) | border;
+			});
+
+		componente = CatchEvent(componente, [&](Event e) {
+			if (e == Event::Return) {
+				pantalla.ExitLoopClosure()();
+				return true;
+			}
+			return false;
+			});
+
+		pantalla.Loop(componente);
+
+		if (!convertirEntero(idTexto, id)) {
+			::system("cls");
+			error = "Entrada invalida. El ID debe ser numerico.";
+			continue;
+		}
+		if (!convertirEntero(telefonoTexto, telefono)) {
+			::system("cls");
+			error = "Entrada invalida. El telefono debe ser numerico.";
+			continue;
+		}
+		break;
 	}
 
 	//Verificar que no exista un cliente con el mismo ID
-	if (buscarClientePorId(nuevo->dato.id) != NULL) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 8); cout << "Ya existe un cliente con ese ID." << endl;
-		delete nuevo;
+	if (buscarClientePorId(id) != NULL) {
+		::system("cls");
+		mostrarMensajeCola("INGRESAR CLIENTE", "ERROR: Ya existe un cliente con ese ID.", Color::Red);
 		return;
 	}
 
-	cin.ignore();
-	SetConsoleTextAttribute(hConsole, 9);
-	gotoxy(25, 6); cout << "Ingrese Nombre: ";	getline(cin, nuevo->dato.nombre);
-	gotoxy(25, 7); cout << "Ingrese Direccion: "; getline(cin, nuevo->dato.direccion);
-	gotoxy(25, 8); cout << "Ingrese Telefono: ";
-	while (!(cin >> nuevo->dato.telefono)) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 4); cout << "Entrada invalida. Solo se permiten numeros." << endl;
-		cin.clear();
-		cin.ignore();
-		SetConsoleTextAttribute(hConsole, 9);
-		gotoxy(25, 8); cout << "Ingrese Telefono: ";
-	}
+	NodoCliente* nuevo = new NodoCliente;
+	nuevo->dato.id = id;
+	nuevo->dato.nombre = nombre;
+	nuevo->dato.direccion = direccion;
+	nuevo->dato.telefono = telefono;
 	nuevo->siguiente = NULL;
 
 	if (cola.frente == NULL) {
-		cola.frente = nuevo;
-		cola.fincola = nuevo;
+		cola.frente = cola.fincola = nuevo;
 	}
 	else {
 		cola.fincola->siguiente = nuevo;
 		cola.fincola = nuevo;
 	}
 	cola.cantidad++;
-	SetConsoleTextAttribute(hConsole, 2);
-	gotoxy(25, 9); cout << "Cliente agregado correctamente." << endl;
+
+	::system("cls");
+	mostrarMensajeCola("INGRESAR CLIENTE", "Cliente agregado correctamente.", Color::Green);
 }
+
 void verClientes() {
 	::system("cls");
 	NodoCliente* aux = cola.frente;
 
-	SetConsoleTextAttribute(hConsole, 9);
-	gotoxy(25, 3); cout << "---- LISTA DE CLIENTES ----" << endl;
+	Elements filas;
+	filas.push_back(text("---- LISTA DE CLIENTES ----") | bold | color(Color::Cyan));
+	filas.push_back(separator());
+
 	if (aux == NULL) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 5); cout << "No hay clientes registrados." << endl;
-		return;
+		filas.push_back(text("No hay clientes registrados.") | color(Color::Red));
+	}
+	else {
+		while (aux != NULL) {
+			filas.push_back(vbox({
+				text("ID:        " + to_string(aux->dato.id)),
+				text("Nombre:    " + aux->dato.nombre),
+				text("Direccion: " + aux->dato.direccion),
+				text("Telefono:  " + to_string(aux->dato.telefono)),
+				}) | border);
+			aux = aux->siguiente;
+		}
+		filas.push_back(
+			text("Total en cola: " + to_string(cola.cantidad)) | color(Color::Green)
+		);
 	}
 
-	while (aux != NULL) {
-		SetConsoleTextAttribute(hConsole, 9);
-		gotoxy(25, 4); cout << "\nID: " << aux->dato.id << endl;
-		gotoxy(25, 5); cout << "Nombre: " << aux->dato.nombre << endl;
-		gotoxy(25, 6); cout << "Direccion: " << aux->dato.direccion << endl;
-		gotoxy(25, 7); cout << "Telefono: " << aux->dato.telefono << endl;
-		gotoxy(25, 8); cout << "-----------------------------" << endl;
-		aux = aux->siguiente;
-	}
-
-	SetConsoleTextAttribute(hConsole, 2);
-	gotoxy(25, 9); cout << "Total de clientes en cola: " << cola.cantidad << endl;
+	Element doc = vbox(filas) | border;
+	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));
+	Render(pantalla, doc);
+	pantalla.Print();
+	cout << endl;
 }
+
 void modificiarCliente() {
 	::system("cls");
 
-	int idBuscado;
-	SetConsoleTextAttribute(hConsole, 9);
-	gotoxy(25, 3); cout << "---- MODIFICAR CLIENTE ----" << endl;
-	gotoxy(25, 4); cout << "Ingrese el ID del cliente a modificar: ";
-	cin >> idBuscado;
-	NodoCliente* aux = buscarClientePorId(idBuscado);
+	string idTexto, error;
+	int idBuscado = 0;
 
+	while (true) {
+		auto inputId = Input(&idTexto, "ID");
+		auto pantalla = ScreenInteractive::TerminalOutput();
+		auto componente = Renderer(inputId, [&] {
+			Elements filas = {
+				text("---- MODIFICAR CLIENTE ----") | bold | color(Color::Cyan),
+				separator(),
+				hbox(text("Ingrese el ID del cliente a modificar: "), inputId->Render()),
+				separator(),
+				text("Presione Enter para buscar."),
+			};
+			if (!error.empty())
+				filas.push_back(text(error) | color(Color::Red));
+			return vbox(filas) | border;
+			});
+
+		componente = CatchEvent(componente, [&](Event e) {
+			if (e == Event::Return) { pantalla.ExitLoopClosure()(); return true; }
+			return false;
+			});
+
+		pantalla.Loop(componente);
+
+		if (!convertirEntero(idTexto, idBuscado)) {
+			::system("cls");
+			error = "Entrada invalida. El ID debe ser numerico.";
+			continue;
+		}
+		break;
+	}
+
+	NodoCliente* aux = buscarClientePorId(idBuscado);
 	if (aux == NULL) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 5); cout << "No se encontro el cliente." << endl;
+		::system("cls");
+		mostrarMensajeCola("---- MODIFICAR CLIENTE ----", "No se encontro el cliente.", Color::Red);
 		return;
 	}
 
-	cin.ignore();
-	SetConsoleTextAttribute(hConsole, 11);
-	gotoxy(25, 5); cout << "Nuevo nombre: "; getline(cin, aux->dato.nombre);
-	gotoxy(25, 6); cout << "Nueva direccion: ";	getline(cin, aux->dato.direccion);
-	gotoxy(25, 7); cout << "Nuevo telefono: ";	cin >> aux->dato.telefono;
+	string nombre = aux->dato.nombre;
+	string direccion = aux->dato.direccion;
+	string telefonoTexto = to_string(aux->dato.telefono);
+	int telefono = aux->dato.telefono;
+	error.clear();
 
-	SetConsoleTextAttribute(hConsole, 2);
-	gotoxy(25, 9); cout << "\nCliente modificado correctamente." << endl;
+	while (true) {
+		::system("cls");
+		auto inputNombre = Input(&nombre, "Nombre");
+		auto inputDireccion = Input(&direccion, "Direccion");
+		auto inputTelefono = Input(&telefonoTexto, "Telefono");
+
+		auto contenedor = Container::Vertical({
+			inputNombre, inputDireccion, inputTelefono
+			});
+
+		auto pantalla = ScreenInteractive::TerminalOutput();
+		auto componente = Renderer(contenedor, [&] {
+			Elements filas = {
+				text("---- MODIFICAR CLIENTE ----") | bold | color(Color::Cyan),
+				separator(),
+				text("ID: " + to_string(aux->dato.id)),
+				hbox(text("Nombre:     "), inputNombre->Render()),
+				hbox(text("Direccion:  "), inputDireccion->Render()),
+				hbox(text("Telefono:   "), inputTelefono->Render()),
+				separator(),
+				text("Use Tab para moverse y Enter para guardar."),
+			};
+			if (!error.empty())
+				filas.push_back(text(error) | color(Color::Red));
+			return vbox(filas) | border;
+			});
+
+		componente = CatchEvent(componente, [&](Event e) {
+			if (e == Event::Return) { pantalla.ExitLoopClosure()(); return true; }
+			return false;
+			});
+
+		pantalla.Loop(componente);
+
+		if (!convertirEntero(telefonoTexto, telefono)) {
+			::system("cls");
+			error = "Entrada invalida. El telefono debe ser numerico.";
+			continue;
+		}
+		break;
+	}
+
+	aux->dato.nombre = nombre;
+	aux->dato.direccion = direccion;
+	aux->dato.telefono = telefono;
+
+	::system("cls");
+	mostrarMensajeCola("---- MODIFICAR CLIENTE ----", "Cliente modificado correctamente.", Color::Green);
 }
+
 void buscarCliente() {
-	int idBuscado;
-	SetConsoleTextAttribute(hConsole, 9);
-	gotoxy(25, 3); cout << "---- BUSCAR CLIENTE ----" << endl;
-	gotoxy(25, 4); cout << "Ingrese el ID del cliente: "; cin >> idBuscado;
+	::system("cls");
+
+	string idTexto, error;
+	int idBuscado = 0;
+
+	while (true) {
+		auto inputId = Input(&idTexto, "ID");
+		auto pantalla = ScreenInteractive::TerminalOutput();
+		auto componente = Renderer(inputId, [&] {
+			Elements filas = {
+				text("---- BUSCAR CLIENTE ----") | bold | color(Color::Cyan),
+				separator(),
+				hbox(text("Ingrese el ID del cliente: "), inputId->Render()),
+				separator(),
+				text("Presione Enter para buscar."),
+			};
+			if (!error.empty())
+				filas.push_back(text(error) | color(Color::Red));
+			return vbox(filas) | border;
+			});
+
+		componente = CatchEvent(componente, [&](Event e) {
+			if (e == Event::Return) { pantalla.ExitLoopClosure()(); return true; }
+			return false;
+			});
+
+		pantalla.Loop(componente);
+
+		if (!convertirEntero(idTexto, idBuscado)) {
+			::system("cls");
+			error = "Entrada invalida. El ID debe ser numerico.";
+			continue;
+		}
+		break;
+	}
+
 	NodoCliente* aux = buscarClientePorId(idBuscado);
+	::system("cls");
 
 	if (aux == NULL) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 6); cout << "No se encontro el cliente." << endl;
+		mostrarMensajeCola("---- BUSCAR CLIENTE ----", "No se encontro el cliente.", Color::Red);
+		return;
 	}
-	else {
-		SetConsoleTextAttribute(hConsole, 2);
-		gotoxy(25, 6); cout << "\nCliente encontrado:" << endl;
-		gotoxy(25, 7); cout << "ID: " << aux->dato.id << endl;
-		gotoxy(25, 8); cout << "Nombre: " << aux->dato.nombre << endl;
-		gotoxy(25, 9); cout << "Direccion: " << aux->dato.direccion << endl;
-		gotoxy(25, 10); cout << "Telefono: " << aux->dato.telefono << endl;
-	}
+
+	Element doc = vbox({
+		text("CLIENTE ENCONTRADO") | bold | color(Color::Cyan),
+		separator(),
+		text("ID:        " + to_string(aux->dato.id)),
+		text("Nombre:    " + aux->dato.nombre),
+		text("Direccion: " + aux->dato.direccion),
+		text("Telefono:  " + to_string(aux->dato.telefono)),
+		}) | border;
+
+	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));
+	Render(pantalla, doc);
+	pantalla.Print();
+	cout << endl;
 }
+
 void eliminarCliente() {
 	::system("cls");
 
-	SetConsoleTextAttribute(hConsole, 9);
-	gotoxy(25, 3); cout << "---- ELIMINAR CLIENTE ----" << endl;
 	if (cola.frente == NULL) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 5); cout << "No hay clientes para eliminar." << endl;
+		mostrarMensajeCola("---- ELIMINAR CLIENTE ----", "No hay clientes para eliminar.", Color::Red);
 		return;
 	}
 
 	NodoCliente* aux = cola.frente;
-	SetConsoleTextAttribute(hConsole, 4);
-	gotoxy(25, 5); cout << "Se eliminara el cliente al frente de la cola:" << endl;
-	gotoxy(25, 6); cout << "ID: " << aux->dato.id << endl;
-	gotoxy(25, 7); cout << "Nombre: " << aux->dato.nombre << endl;
+	Cliente clienteEliminado = aux->dato;
 
 	cola.frente = cola.frente->siguiente;
-
-	if (cola.frente == NULL) {
-		cola.fincola = NULL;
-	}
-
+	if (cola.frente == NULL) cola.fincola = NULL;
 	delete aux;
 	cola.cantidad--;
-	SetConsoleTextAttribute(hConsole, 2);
-	gotoxy(25, 9); cout << "Cliente eliminado correctamente." << endl;
+
+	Element doc = vbox({
+		text("---- ELIMINAR CLIENTE ----") | bold | color(Color::Cyan),
+		separator(),
+		text("Se elimino el cliente al frente de la cola:"),
+		separator(),
+		text("ID:        " + to_string(clienteEliminado.id)),
+		text("Nombre:    " + clienteEliminado.nombre),
+		text("Direccion: " + clienteEliminado.direccion),
+		text("Telefono:  " + to_string(clienteEliminado.telefono)),
+		}) | border;
+
+	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));
+	Render(pantalla, doc);
+	pantalla.Print();
+	cout << endl;
 }
 
 

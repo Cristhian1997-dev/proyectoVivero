@@ -1,7 +1,11 @@
 ﻿#include <cstdlib>
 #include <iostream>
 #include <string>
-#include <windows.h>
+
+#include <ftxui/component/component.hpp>
+#include <ftxui/component/event.hpp>
+#include <ftxui/component/screen_interactive.hpp>
+#include <ftxui/dom/elements.hpp>
 
 #include "arbol_abb.h"
 #include "cola_clientes.h"
@@ -12,30 +16,64 @@
 #include "pila_plantas.h"
 #include "proveedores_circular.h"
 
+using namespace ftxui;
 using namespace std;
 int main() {
-	dibujo();
-	string nombre;
-	string contra;
-	SetConsoleTextAttribute(hConsole, 3);
-	gotoxy(45, 5); cout << "Bienvenidos a RAICES VERDES GT." << endl;
-	gotoxy(47, 7); cout << "Ingrese su usuario: ";	cin >> nombre;
-	gotoxy(47, 8); cout << "Ingrese su contrasena: "; cin >> contra;
+    dibujo();
+    string nombre;
+    string contra;
+    string error;
+    bool salir = false;
 
-	if (login(nombre, contra)) {
-		menuPrincipal();
-	}
-	else {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(43, 10); cout << "Los datos ingresados son incorrectos." << endl;
-		cout << "\n\n";
-	}
+    auto pantalla = ScreenInteractive::TerminalOutput();
+    auto inputNombre = Input(&nombre, "Usuario");
 
-	liberarPila();
-	liberarCola();
-	liberarListaCircular();
-	liberarArbolABB(raizABB);
+    InputOption opcionContra;
+    opcionContra.password = true;
+    auto inputContra = Input(&contra, "Contraseña", opcionContra);
 
-	system("pause");
-	return 0;
+    auto contenedor = Container::Vertical({ inputNombre, inputContra });
+
+    auto componente = Renderer(contenedor, [&] {
+        Elements filas = {
+            text("Bienvenidos a RAICES VERDES GT.") | bold | color(Color::Cyan) | hcenter,
+            separator(),
+            hbox(text("Ingrese su usuario:    "), inputNombre->Render()),
+            hbox(text("Ingrese su contrasena: "), inputContra->Render()),
+        };
+
+        if (!error.empty())
+            filas.push_back(text(error) | color(Color::Red));
+
+        return vbox(filas) | border;
+        });
+
+    componente = CatchEvent(componente, [&](Event e) {
+        if (e == Event::Return) {
+            if (login(nombre, contra)) {
+                salir = true;
+                pantalla.ExitLoopClosure()();
+            }
+            else {
+                error = "Los datos ingresados son incorrectos.";
+                contra = "";
+            }
+            return true;
+        }
+        return false;
+        });
+
+    pantalla.Loop(componente);
+
+    if (salir) {
+        menuPrincipal();
+    }
+
+    liberarPila();
+    liberarCola();
+    liberarListaCircular();
+    liberarArbolABB(raizABB);
+
+    system("pause");
+    return 0;
 }

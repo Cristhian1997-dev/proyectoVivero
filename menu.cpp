@@ -3,17 +3,35 @@
 #include <string>
 #include <windows.h>
 
+#include <ftxui/dom/elements.hpp>
+#include <ftxui/screen/screen.hpp>
+
 #include "arbol_abb.h"
 #include "cola_clientes.h"
 #include "consola.h"
 #include "globales.h"
 #include "menu.h"
+#include "menu_arboles.h"
 #include "pila_plantas.h"
 #include "proveedores_circular.h"
 #include "proveedores_internacionales.h"
 #include "proveedores_locales.h"
 
 using namespace std;
+using namespace ftxui;
+static void mostrarMensajeMenu(const string& titulo, const string& mensaje, Color colorMensaje) {
+	::system("cls");
+	Element documento = vbox({
+		text(titulo) | bold | color(Color::Green),
+		separator(),
+		text(mensaje) | color(colorMensaje),
+	}) | border;
+
+	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(documento));
+	Render(pantalla, documento);
+	pantalla.Print();
+	cout << endl;
+}
 void menuPrincipal() {
 	int opcion;
 
@@ -23,7 +41,7 @@ void menuPrincipal() {
 		"Menu de proveedores locales (Lista Simple)",
 		"Menu de proveedores internacionales (Lista Doble)",
 		"Modulo de proveedores (Lista Circular)",
-		"Modulo de plantas (Arbol ABB)",
+		"Arboles Binarios de Busqueda",
 		"Salir"
 	};
 
@@ -39,10 +57,9 @@ void menuPrincipal() {
 		case 3: ProveedoresLocales(); break;
 		case 4: ProveedoresInternacionales(); break;
 		case 5: ListaCircularProveedor(); break;
-		case 6: ArbolABBPlantas(); break;
+		case 6: MenuArbolesBinarios(); break;
 		case 7:
-			SetConsoleTextAttribute(hConsole, 2);
-			gotoxy(25, 20); cout << "Saliendo del sistema, gracias por visitarnos." << endl;
+			mostrarMensajeMenu("SISTEMA", "Saliendo del sistema, gracias por visitarnos.", Color::Green);
 			break;
 		}
 	} while (opcion != 7);
@@ -198,3 +215,5 @@ void ArbolABBPlantas() {
 		}
 	} while (op != 6);
 }
+
+

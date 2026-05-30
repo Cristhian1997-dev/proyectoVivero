@@ -436,11 +436,3 @@ void liberarPila() {
 		delete aux;
 	}
 }
-
-
-
-
-
-
-
-

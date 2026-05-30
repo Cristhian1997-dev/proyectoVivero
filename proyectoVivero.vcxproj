@@ -142,6 +142,8 @@
     <ClCompile Include="proveedores_circular.cpp" />
     <ClCompile Include="arbol_abb.cpp" />
     <ClCompile Include="menu_ftxui.cpp" />
+    <ClCompile Include="menu_arboles.cpp" />
+    <ClCompile Include="arbol_avl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="modelos.h" />
@@ -156,5 +158,7 @@
     <ClInclude Include="proveedores_circular.h" />
     <ClInclude Include="arbol_abb.h" />
     <ClInclude Include="menu_ftxui.h" />
+    <ClInclude Include="menu_arboles.h" />
+    <ClInclude Include="arbol_avl.h" />
   </ItemGroup>
 </Project>

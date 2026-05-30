@@ -1,46 +1,44 @@
 ﻿#include <cstdlib>
 #include <iostream>
-#include <windows.h>
+
+#include <ftxui/dom/elements.hpp>
+#include <ftxui/screen/screen.hpp>
 
 #include "consola.h"
 
 using namespace std;
-
-void gotoxy(int x, int y) {
-	HANDLE hcon;
-	hcon = GetStdHandle(STD_OUTPUT_HANDLE);
-	COORD dwPos;
-	dwPos.X = x;
-	dwPos.Y = y;
-	SetConsoleCursorPosition(hcon, dwPos);
-}
+using namespace ftxui;
 
 void dibujo() {
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 6);
-	SetConsoleOutputCP(CP_UTF8);// Codigo para que reconozca caracteres unicos
-
-	cout <<
-		"     â–ˆâ–ˆ                     â–ˆâ–ˆ    \n"
-		"     â–ˆ  â–ˆâ–ˆâ–ˆ             â–ˆâ–ˆâ–ˆ  â–ˆ    \n"
-		"     â–ˆ     â–ˆ           â–ˆ     â–ˆ    \n"
-		"     â–ˆ     â–ˆ           â–ˆ     â–ˆ    \n"
-		"     â–ˆâ–ˆâ–ˆ    â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆ     â–ˆâ–ˆâ–ˆ   \n"
-		"     â–ˆâ–ˆâ–ˆ                    â–ˆâ–ˆâ–ˆ   \n"
-		"    â–ˆ       â–ˆ          â–ˆ      â–ˆ   \n"
-		"    â–ˆ       â–ˆ          â–ˆ      â–ˆ   \n"
-		"    â–ˆ       â–ˆ          â–ˆ      â–ˆ   \n"
-		"    â–ˆ            â–ˆâ–ˆ           â–ˆ   \n"
-		"    â–ˆ    â–ˆâ–ˆâ–ˆâ–ˆ          â–ˆâ–ˆâ–ˆâ–ˆ   â–ˆ   \n"
-		"    â–ˆ           â–ˆâ–ˆâ–ˆâ–ˆ          â–ˆ   \n"
-		"    â–ˆ    â–ˆâ–ˆâ–ˆâ–ˆ          â–ˆâ–ˆâ–ˆâ–ˆ   â–ˆ   \n"
-		"     â–ˆ                       â–ˆ    \n"
-		"      â–ˆ                     â–ˆ     \n"
-		"       â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆ      \n"
-		"                                  \n"
-		"          PROGRAMACION 3          \n";
-
-
-	::system("pause");
 	::system("cls");
 
+	Element conejo = vbox({
+		text("       (\\_//)        ") | hcenter,
+		text("       ( o.o )       ") | hcenter,
+		text("       / > < \\       ") | hcenter,
+		text("      /       \\      ") | hcenter,
+		text("     /  RAICES \\     ") | hcenter,
+		text("    /   VERDES  \\    ") | hcenter,
+		text("    (_____________)    ") | hcenter,
+	}) | color(Color::Yellow);
+
+	Element contenido = vbox({
+		text("RAICES VERDES GT") | bold | color(Color::Green) | hcenter,
+		separator(),
+		conejo,
+		separator(),
+		text("Vivero y gestion de plantas") | color(Color::White) | hcenter,
+		text("PROGRAMACION 3") | color(Color::Yellow) | hcenter,
+		text("Cristhian Mucun | 2290-17-17851") | color(Color::Yellow) | hcenter,
+		text("Bryan Anleu     | 2290-20-23001") | color(Color::Yellow) | hcenter,
+		text("David Hernandez | 2290-24-10427 ") | color(Color::Yellow) | hcenter,
+	}) | borderRounded | color(Color::Green);
+
+	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(contenido));
+	Render(pantalla, contenido | center);
+	pantalla.Print();
+
+	cout << endl;
+	::system("pause");
+	::system("cls");
 }

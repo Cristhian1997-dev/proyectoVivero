@@ -1,12 +1,44 @@
-﻿#include <cstdlib>
+#include <cstdlib>
 #include <iostream>
-#include <windows.h>
+#include <string>
+
+#include <ftxui/component/component.hpp>
+#include <ftxui/component/event.hpp>
+#include <ftxui/component/screen_interactive.hpp>
+#include <ftxui/dom/elements.hpp>
+#include <ftxui/screen/screen.hpp>
 
 #include "consola.h"
 #include "globales.h"
 #include "proveedores_internacionales.h"
 
+using namespace ftxui;
 using namespace std;
+
+static bool convertirEntero(const string& texto, int& valor) {
+	try {
+		size_t pos = 0;
+		valor = stoi(texto, &pos);
+		return pos == texto.size();
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+static void mostrarMensajeInternacional(const string& titulo, const string& mensaje, Color colorMensaje) {
+	Element doc = vbox({
+		text(titulo) | bold | color(Color::Magenta),
+		separator(),
+		text(mensaje) | color(colorMensaje),
+		}) | border;
+
+	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));
+	Render(pantalla, doc);
+	pantalla.Print();
+	cout << endl;
+}
+
 NodoDoble* crearNodoProveedorInternacional(const Proveedor& prov) {
 	NodoDoble* nuevo = new NodoDoble();
 	nuevo->dato = prov;
@@ -24,41 +56,75 @@ NodoDoble* buscarProveedorInternacionalPorID(ListaDoble& lista, int id) { //Busc
 	}
 	return NULL;
 }
+
 void ingresarProveedorInternacional(ListaDoble& lista) {
 	//Codigo para ingresar proveedores internacionales al final de la lista
 	::system("cls");
-	Proveedor nuevoProv;//Variable temporal para almacenar los datos
-	SetConsoleTextAttribute(hConsole, 9);
-	gotoxy(25, 3); cout << "---- INGRESAR UN NUEVO PROVEEDOR INTERNACIONAL ----" << endl;
-	gotoxy(25, 5); cout << "Ingrese ID: ";
-	while (!(cin >> nuevoProv.id)) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
-		cin.clear();
-		cin.ignore();
-		SetConsoleTextAttribute(hConsole, 9);
-		gotoxy(25, 5); cout << "Ingresa ID: ";
+
+	string idTexto, nombre, tipo, telefonoTexto, contacto, error;
+	int id = 0, telefono = 0;
+
+	while (true) {
+		auto inputId = Input(&idTexto, "ID");
+		auto inputNombre = Input(&nombre, "Nombre");
+		auto inputTipo = Input(&tipo, "Tipo");
+		auto inputTelefono = Input(&telefonoTexto, "Telefono");
+		auto inputContacto = Input(&contacto, "Contacto");
+
+		auto contenedor = Container::Vertical({
+			inputId, inputNombre, inputTipo, inputTelefono, inputContacto
+			});
+
+		auto pantalla = ScreenInteractive::TerminalOutput();
+		auto componente = Renderer(contenedor, [&] {
+			Elements filas = {
+				text("---- INGRESAR UN NUEVO PROVEEDOR INTERNACIONAL ----") | bold | color(Color::Magenta),
+				separator(),
+				hbox(text("ID:        "), inputId->Render()),
+				hbox(text("Nombre:    "), inputNombre->Render()),
+				hbox(text("Tipo:      "), inputTipo->Render()),
+				hbox(text("Telefono:  "), inputTelefono->Render()),
+				hbox(text("Contacto:  "), inputContacto->Render()),
+				separator(),
+				text("Use Tab para moverse y Enter para guardar."),
+			};
+			if (!error.empty())
+				filas.push_back(text(error) | color(Color::Red));
+			return vbox(filas) | border;
+			});
+
+		componente = CatchEvent(componente, [&](Event e) {
+			if (e == Event::Return) { pantalla.ExitLoopClosure()(); return true; }
+			return false;
+			});
+
+		pantalla.Loop(componente);
+
+		if (!convertirEntero(idTexto, id)) {
+			::system("cls");
+			error = "Entrada invalida. El ID debe ser numerico.";
+			continue;
+		}
+		if (!convertirEntero(telefonoTexto, telefono)) {
+			::system("cls");
+			error = "Entrada invalida. El telefono debe ser numerico.";
+			continue;
+		}
+		break;
 	}
 	//Verificar que no exista un proveedor con el mismo ID
-	if (buscarProveedorInternacionalPorID(lista, nuevoProv.id) != NULL) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 7); cout << "Ya existe un proveedor con ese ID." << endl;
+	if (buscarProveedorInternacionalPorID(lista, id) != NULL) {
+		::system("cls");
+		mostrarMensajeInternacional("---- INGRESAR UN NUEVO PROVEEDOR INTERNACIONAL ----", "Ya existe un proveedor con ese ID.", Color::Red);
 		return;
 	}
-	cin.ignore();
-	gotoxy(25, 6); cout << "Ingrese Nombre: "; getline(cin, nuevoProv.nombre);
-	gotoxy(25, 7); cout << "Ingrese Tipo: "; getline(cin, nuevoProv.tipo);
-	gotoxy(25, 8); cout << "Ingrese Telefono: ";
-	while (!(cin >> nuevoProv.telefono)) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
-		cin.clear();
-		cin.ignore();
-		SetConsoleTextAttribute(hConsole, 9);
-		gotoxy(25, 8); cout << "Ingresa Telefono: ";
-	}
-	cin.ignore();
-	gotoxy(25, 8); cout << "Ingrese Contacto: "; getline(cin, nuevoProv.contacto);
+
+	Proveedor nuevoProv;//Variable temporal para almacenar los datos
+	nuevoProv.id = id;
+	nuevoProv.nombre = nombre;
+	nuevoProv.tipo = tipo;
+	nuevoProv.telefono = telefono;
+	nuevoProv.contacto = contacto;
 	NodoDoble* nuevo = crearNodoProveedorInternacional(nuevoProv);
 	if (lista.cabeza == NULL) {
 		//Si la lista esta vacia, el nuevo nodo se convierte en la cabeza y cola
@@ -71,43 +137,78 @@ void ingresarProveedorInternacional(ListaDoble& lista) {
 		lista.cola->siguiente = nuevo;
 		lista.cola = nuevo;
 	}
-	gotoxy(25, 12); cout << "Proveedor internacional agregado correctamente al final de la lista." << endl;
+	::system("cls");
+	mostrarMensajeInternacional("---- INGRESAR UN NUEVO PROVEEDOR INTERNACIONAL ----", "Proveedor agregado al final correctamente.", Color::Green);
 }
+
 void ingresarProveedorInternacionalAlInicio(ListaDoble& lista) {
 	//Codigo para ingresar proveedores internacionales al inicio de la lista
 	::system("cls");
-	Proveedor nuevoProv;//Variable temporal 
-	SetConsoleTextAttribute(hConsole, 9);
-	gotoxy(25, 3); cout << "---- INGRESAR UN NUEVO PROVEEDOR INTERNACIONAL ----" << endl;
-	gotoxy(25, 5); cout << "Ingrese ID: ";
-	while (!(cin >> nuevoProv.id)) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
-		cin.clear();
-		cin.ignore();
-		SetConsoleTextAttribute(hConsole, 9);
-		gotoxy(25, 5); cout << "Ingresa ID: ";
+
+	string idTexto, nombre, tipo, telefonoTexto, contacto, error;
+	int id = 0, telefono = 0;
+
+	while (true) {
+		auto inputId = Input(&idTexto, "ID");
+		auto inputNombre = Input(&nombre, "Nombre");
+		auto inputTipo = Input(&tipo, "Tipo");
+		auto inputTelefono = Input(&telefonoTexto, "Telefono");
+		auto inputContacto = Input(&contacto, "Contacto");
+
+		auto contenedor = Container::Vertical({
+			inputId, inputNombre, inputTipo, inputTelefono, inputContacto
+			});
+
+		auto pantalla = ScreenInteractive::TerminalOutput();
+		auto componente = Renderer(contenedor, [&] {
+			Elements filas = {
+				text("---- INGRESAR UN NUEVO PROVEEDOR INTERNACIONAL ----") | bold | color(Color::Magenta),
+				separator(),
+				hbox(text("ID:        "), inputId->Render()),
+				hbox(text("Nombre:    "), inputNombre->Render()),
+				hbox(text("Tipo:      "), inputTipo->Render()),
+				hbox(text("Telefono:  "), inputTelefono->Render()),
+				hbox(text("Contacto:  "), inputContacto->Render()),
+				separator(),
+				text("Use Tab para moverse y Enter para guardar."),
+			};
+			if (!error.empty())
+				filas.push_back(text(error) | color(Color::Red));
+			return vbox(filas) | border;
+			});
+
+		componente = CatchEvent(componente, [&](Event e) {
+			if (e == Event::Return) { pantalla.ExitLoopClosure()(); return true; }
+			return false;
+			});
+
+		pantalla.Loop(componente);
+
+		if (!convertirEntero(idTexto, id)) {
+			::system("cls");
+			error = "Entrada invalida. El ID debe ser numerico.";
+			continue;
+		}
+		if (!convertirEntero(telefonoTexto, telefono)) {
+			::system("cls");
+			error = "Entrada invalida. El telefono debe ser numerico.";
+			continue;
+		}
+		break;
 	}
 	//Verificar que no exista un proveedor con el mismo ID
-	if (buscarProveedorInternacionalPorID(lista, nuevoProv.id) != NULL) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 7); cout << "Ya existe un proveedor con ese ID." << endl;
+	if (buscarProveedorInternacionalPorID(lista, id) != NULL) {
+		::system("cls");
+		mostrarMensajeInternacional("---- INGRESAR UN NUEVO PROVEEDOR INTERNACIONAL ----", "Ya existe un proveedor con ese ID.", Color::Red);
 		return;
 	}
-	cin.ignore();
-	gotoxy(25, 6); cout << "Ingrese Nombre: "; getline(cin, nuevoProv.nombre);
-	gotoxy(25, 7); cout << "Ingrese Tipo: "; getline(cin, nuevoProv.tipo);
-	gotoxy(25, 8); cout << "Ingrese Telefono: ";
-	while (!(cin >> nuevoProv.telefono)) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
-		cin.clear();
-		cin.ignore();
-		SetConsoleTextAttribute(hConsole, 9);
-		gotoxy(25, 8); cout << "Ingrese Telefono: ";
-	}
-	cin.ignore();
-	gotoxy(25, 8); cout << "Ingrese Contacto: "; getline(cin, nuevoProv.contacto);
+
+	Proveedor nuevoProv;//Variable temporal 
+	nuevoProv.id = id;
+	nuevoProv.nombre = nombre;
+	nuevoProv.tipo = tipo;
+	nuevoProv.telefono = telefono;
+	nuevoProv.contacto = contacto;
 	//Crea el nuevo nodo con los datos ingresados
 	NodoDoble* nuevo = crearNodoProveedorInternacional(nuevoProv);
 	if (lista.cabeza == NULL) {
@@ -121,137 +222,301 @@ void ingresarProveedorInternacionalAlInicio(ListaDoble& lista) {
 		lista.cabeza->anterior = nuevo;
 		lista.cabeza = nuevo;
 	}
-	gotoxy(25, 12); cout << "Proveedor internacional agregado correctamente al inicio de la lista." << endl;
+	::system("cls");
+	mostrarMensajeInternacional("---- INGRESAR UN NUEVO PROVEEDOR INTERNACIONAL ----", "Proveedor agregado al inicio correctamente.", Color::Green);
+
 }
+
 void verProveedoresInternacionales(ListaDoble& lista) {
 	//Codigo para ver proveedores internacionales
 	::system("cls");
-	NodoDoble* aux = lista.cabeza;//Apuntamos al primer nodo de la lista
-	if (aux == NULL) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 5); cout << "No hay proveedores internacionales registrados." << endl;
-		return;
+
+	Elements filas;
+	filas.push_back(text("---- PROVEEDORES INTERNACIONALES ----") | bold | color(Color::Magenta));
+	filas.push_back(separator());
+
+	if (lista.cabeza == NULL) {
+		filas.push_back(text("No hay proveedores internacionales registrados.") | color(Color::Red));
 	}
-	SetConsoleTextAttribute(hConsole, 2);
-	gotoxy(25, 3); cout << "---- PROVEEDORES INTERNACIONALES ----" << endl;
-	while (aux != NULL) {//Recorremos la lista hasta el final
-		gotoxy(25, 5); cout << "ID: " << aux->dato.id << endl;
-		gotoxy(25, 6); cout << "Nombre: " << aux->dato.nombre << endl;
-		gotoxy(25, 7); cout << "Tipo: " << aux->dato.tipo << endl;
-		gotoxy(25, 8); cout << "Telefono: " << aux->dato.telefono << endl;
-		gotoxy(25, 9); cout << "Contacto: " << aux->dato.contacto << endl;
-		gotoxy(25, 10); cout << "------------------------" << endl;
-		aux = aux->siguiente;
+	else {
+		NodoDoble* aux = lista.cabeza;//Apuntamos al primer nodo de la lista
+		while (aux != NULL) {//Recorremos la lista hasta el final
+			filas.push_back(vbox({
+				text("ID:       " + to_string(aux->dato.id)),
+				text("Nombre:   " + aux->dato.nombre),
+				text("Tipo:     " + aux->dato.tipo),
+				text("Telefono: " + to_string(aux->dato.telefono)),
+				text("Contacto: " + aux->dato.contacto),
+				}) | border);
+			aux = aux->siguiente;
+		}
 	}
+
+	Element doc = vbox(filas) | border;
+	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));
+	Render(pantalla, doc);
+	pantalla.Print();
+	cout << endl;
 }
+
 void verReversaProveedoresInternacionales(ListaDoble& lista) {
 	//Codigo para ver proveedores internacionales en orden reverso
 	::system("cls");
-	NodoDoble* aux = lista.cola;//Apuntamos al ultimo nodo de la lista
-	if (aux == NULL) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 3); cout << "No hay proveedores internacionales registrados." << endl;
-		return;
+
+	Elements filas;
+	filas.push_back(text("---- PROVEEDORES INTERNACIONALES ----") | bold | color(Color::Magenta));
+	filas.push_back(separator());
+
+	if (lista.cabeza == NULL) {
+		filas.push_back(text("No hay proveedores internacionales registrados.") | color(Color::Red));
 	}
-	SetConsoleTextAttribute(hConsole, 2);
-	gotoxy(25, 3); cout << "---- PROVEEDORES INTERNACIONALES (ORDEN INVERSO) ----" << endl;
-	while (aux != NULL) {//Recorremos la lista del final al inicio
-		gotoxy(25, 4); cout << "ID: " << aux->dato.id << endl;
-		gotoxy(25, 5); cout << "Nombre: " << aux->dato.nombre << endl;
-		gotoxy(25, 6); cout << "Tipo: " << aux->dato.tipo << endl;
-		gotoxy(25, 7); cout << "Telefono: " << aux->dato.telefono << endl;
-		gotoxy(25, 8); cout << "Contacto: " << aux->dato.contacto << endl;
-		gotoxy(25, 9); cout << "------------------------" << endl;
-		aux = aux->anterior;
+	else {
+		NodoDoble* aux = lista.cabeza;//Apuntamos al primer nodo de la lista
+		while (aux != NULL) {//Recorremos la lista hasta el final
+			filas.push_back(vbox({
+				text("ID:       " + to_string(aux->dato.id)),
+				text("Nombre:   " + aux->dato.nombre),
+				text("Tipo:     " + aux->dato.tipo),
+				text("Telefono: " + to_string(aux->dato.telefono)),
+				text("Contacto: " + aux->dato.contacto),
+				}) | border);
+			aux = aux->siguiente;
+		}
 	}
+
+	Element doc = vbox(filas) | border;
+	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));
+	Render(pantalla, doc);
+	pantalla.Print();
+	cout << endl;
+
 }
+
 void modificarProveedorInternacional(ListaDoble& lista) {
 	//Codigo para modificar proveedores internacionales
 	::system("cls");
 	if (lista.cabeza == NULL) {//Validacion si la lista esta vacia
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 5); cout << "No hay proveedores internacionales registrados para modificar." << endl;
+		mostrarMensajeInternacional("---- MODIFICAR PROVEEDOR INTERNACIONAL ----", "No hay proveedores registrados para modificar.", Color::Red);
 		return;
 	}
-	int idBuscado;
-	gotoxy(25, 3); cout << "---- MODIFICAR PROVEEDOR INTERNACIONAL ----" << endl;
-	gotoxy(25, 5); cout << "Ingrese el ID del proveedor internacional a modificar: ";
-	cin >> idBuscado;
-	while (!(cin >> idBuscado)) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
-		cin.clear();
-		cin.ignore();
-		SetConsoleTextAttribute(hConsole, 9);
-		gotoxy(25, 5); cout << "Ingrese el ID del proveedor internacional a modificar: ";
+
+	string idTexto, error;
+	int idBuscado = 0;
+
+	while (true) {
+		auto inputId = Input(&idTexto, "ID");
+		auto pantalla = ScreenInteractive::TerminalOutput();
+		auto componente = Renderer(inputId, [&] {
+			Elements filas = {
+				text("---- MODIFICAR PROVEEDOR INTERNACIONAL ----") | bold | color(Color::Magenta),
+				separator(),
+				hbox(text("ID del proveedor: "), inputId->Render()),
+				separator(),
+				text("Presione Enter para buscar."),
+			};
+			if (!error.empty())
+				filas.push_back(text(error) | color(Color::Red));
+			return vbox(filas) | border;
+			});
+
+		componente = CatchEvent(componente, [&](Event e) {
+			if (e == Event::Return) { pantalla.ExitLoopClosure()(); return true; }
+			return false;
+			});
+
+		pantalla.Loop(componente);
+
+		if (!convertirEntero(idTexto, idBuscado)) {
+			::system("cls");
+			error = "Entrada invalida. El ID debe ser numerico.";
+			continue;
+		}
+		break;
 	}
+
 	NodoDoble* aux = buscarProveedorInternacionalPorID(lista, idBuscado);
 	if (aux == NULL) {
-		gotoxy(25, 8); cout << "No se encontro el proveedor." << endl;
+		::system("cls");
+		mostrarMensajeInternacional("---- MODIFICAR PROVEEDOR INTERNACIONAL ----", "No se encontro el proveedor.", Color::Red);
 		return;
 	}
-	cin.ignore();
-	gotoxy(25, 6); cout << "Nuevo nombre: "; getline(cin, aux->dato.nombre);
-	gotoxy(25, 7); cout << "Nuevo tipo: "; getline(cin, aux->dato.tipo);
-	gotoxy(25, 8); cout << "Nuevo telefono: ";
-	while (!(cin >> aux->dato.telefono)) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 4); cout << "Entrada invalida. Solo se permite numeros." << endl;
-		cin.clear();
-		cin.ignore();
-		SetConsoleTextAttribute(hConsole, 9);
-		gotoxy(25, 8); cout << "Ingrese Telefono: ";
+
+	string nombre = aux->dato.nombre;
+	string tipo = aux->dato.tipo;
+	string telefonoTexto = to_string(aux->dato.telefono);
+	string contacto = aux->dato.contacto;
+	int telefono = aux->dato.telefono;
+	error.clear();
+
+	while (true) {
+		::system("cls");
+		auto inputNombre = Input(&nombre, "Nombre");
+		auto inputTipo = Input(&tipo, "Tipo");
+		auto inputTelefono = Input(&telefonoTexto, "Telefono");
+		auto inputContacto = Input(&contacto, "Contacto");
+
+		auto contenedor = Container::Vertical({
+			inputNombre, inputTipo, inputTelefono, inputContacto
+			});
+
+		auto pantalla = ScreenInteractive::TerminalOutput();
+		auto componente = Renderer(contenedor, [&] {
+			Elements filas = {
+				text("---- MODIFICAR PROVEEDOR INTERNACIONAL ----") | bold | color(Color::Magenta),
+				separator(),
+				text("ID: " + to_string(aux->dato.id)),
+				hbox(text("Nombre:    "), inputNombre->Render()),
+				hbox(text("Tipo:      "), inputTipo->Render()),
+				hbox(text("Telefono:  "), inputTelefono->Render()),
+				hbox(text("Contacto:  "), inputContacto->Render()),
+				separator(),
+				text("Use Tab para moverse y Enter para guardar."),
+			};
+			if (!error.empty())
+				filas.push_back(text(error) | color(Color::Red));
+			return vbox(filas) | border;
+			});
+
+		componente = CatchEvent(componente, [&](Event e) {
+			if (e == Event::Return) { pantalla.ExitLoopClosure()(); return true; }
+			return false;
+			});
+
+		pantalla.Loop(componente);
+
+		if (!convertirEntero(telefonoTexto, telefono)) {
+			::system("cls");
+			error = "Entrada invalida. El telefono debe ser numerico.";
+			continue;
+		}
+		break;
 	}
-	cin.ignore();
-	gotoxy(25, 9); cout << "Nuevo contacto: ";
-	getline(cin, aux->dato.contacto);
-	gotoxy(25, 12); cout << "Proveedor internacional modificado correctamente." << endl;
+
+	aux->dato.nombre = nombre;
+	aux->dato.tipo = tipo;
+	aux->dato.telefono = telefono;
+	aux->dato.contacto = contacto;
+
+	::system("cls");
+	mostrarMensajeInternacional("---- MODIFICAR PROVEEDOR INTERNACIONAL ----", "Proveedor modificado correctamente.", Color::Green);
 }
+
 void buscarProveedorInternacional(ListaDoble& lista) {
 	//Codigo para buscar proveedores internacionales
 	::system("cls");
+
 	if (lista.cabeza == NULL) {//Verificar que la lista no este vacia
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 5); cout << "No hay proveedores internacionales registrados para buscar." << endl;
+		mostrarMensajeInternacional("---- BUSCAR PROVEEDOR INTERNACIONAL ----", "No hay proveedores registrados para buscar.", Color::Red);
 		return;
 	}
-	int idBuscado;
-	SetConsoleTextAttribute(hConsole, 9);
-	gotoxy(25, 3); cout << "---- BUSCAR PROVEEDOR INTERNACIONAL ----" << endl;
-	gotoxy(25, 5); cout << "Ingrese el ID del proveedor internacional: "; cin >> idBuscado;
+
+	string idTexto, error;
+	int idBuscado = 0;
+
+	while (true) {
+		auto inputId = Input(&idTexto, "ID");
+		auto pantalla = ScreenInteractive::TerminalOutput();
+		auto componente = Renderer(inputId, [&] {
+			Elements filas = {
+				text("---- BUSCAR PROVEEDOR INTERNACIONAL ----") | bold | color(Color::Magenta),
+				separator(),
+				hbox(text("ID del proveedor: "), inputId->Render()),
+				separator(),
+				text("Presione Enter para buscar."),
+			};
+			if (!error.empty())
+				filas.push_back(text(error) | color(Color::Red));
+			return vbox(filas) | border;
+			});
+
+		componente = CatchEvent(componente, [&](Event e) {
+			if (e == Event::Return) { pantalla.ExitLoopClosure()(); return true; }
+			return false;
+			});
+
+		pantalla.Loop(componente);
+
+		if (!convertirEntero(idTexto, idBuscado)) {
+			::system("cls");
+			error = "Entrada invalida. El ID debe ser numerico.";
+			continue;
+		}
+		break;
+	}
+
 	NodoDoble* aux = buscarProveedorInternacionalPorID(lista, idBuscado);
+	::system("cls");
 	if (aux == NULL) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 8); cout << "No se encontro el proveedor internacional." << endl;
+		mostrarMensajeInternacional("---- BUSCAR PROVEEDOR INTERNACIONAL ----", "No se encontro el proveedor.", Color::Red);
+		return;
 	}
-	else {
-		SetConsoleTextAttribute(hConsole, 2);
-		gotoxy(25, 7); cout << "Proveedor internacional encontrado:" << endl;
-		gotoxy(25, 8); cout << "ID: " << aux->dato.id << endl;
-		gotoxy(25, 9); cout << "Nombre: " << aux->dato.nombre << endl;
-		gotoxy(25, 10); cout << "Tipo: " << aux->dato.tipo << endl;
-		gotoxy(25, 11); cout << "Telefono: " << aux->dato.telefono << endl;
-		gotoxy(25, 12); cout << "Contacto: " << aux->dato.contacto << endl;
-	}
+
+	Element doc = vbox({
+		text("PROVEEDOR ENCONTRADO") | bold | color(Color::Magenta),
+		separator(),
+		text("ID:       " + to_string(aux->dato.id)),
+		text("Nombre:   " + aux->dato.nombre),
+		text("Tipo:     " + aux->dato.tipo),
+		text("Telefono: " + to_string(aux->dato.telefono)),
+		text("Contacto: " + aux->dato.contacto),
+		}) | border;
+
+	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));
+	Render(pantalla, doc);
+	pantalla.Print();
+	cout << endl;
 }
+
 void eliminarProveedorInternacional(ListaDoble& lista) {
 
 	::system("cls");
 	if (lista.cabeza == NULL) {//Validacion si la lista esta vacia
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 5); cout << "No hay proveedores internacionales registrados para eliminar." << endl;
+		mostrarMensajeInternacional("---- ELIMINAR PROVEEDOR INTERNACIONAL ----", "No hay proveedores registrados para eliminar.", Color::Red);
 		return;
 	}
-	int idBuscado;
-	SetConsoleTextAttribute(hConsole, 9);
-	gotoxy(25, 3); cout << "---- ELIMINAR PROVEEDOR INTERNACIONAL ----" << endl;
-	gotoxy(25, 5); cout << "Ingrese el ID del proveedor internacional a eliminar: "; cin >> idBuscado;
+
+	string idTexto, error;
+	int idBuscado = 0;
+
+	while (true) {
+		auto inputId = Input(&idTexto, "ID");
+		auto pantalla = ScreenInteractive::TerminalOutput();
+		auto componente = Renderer(inputId, [&] {
+			Elements filas = {
+				text("---- ELIMINAR PROVEEDOR INTERNACIONAL ----") | bold | color(Color::Magenta),
+				separator(),
+				hbox(text("ID del proveedor: "), inputId->Render()),
+				separator(),
+				text("Presione Enter para eliminar."),
+			};
+			if (!error.empty())
+				filas.push_back(text(error) | color(Color::Red));
+			return vbox(filas) | border;
+			});
+
+		componente = CatchEvent(componente, [&](Event e) {
+			if (e == Event::Return) { pantalla.ExitLoopClosure()(); return true; }
+			return false;
+			});
+
+		pantalla.Loop(componente);
+
+		if (!convertirEntero(idTexto, idBuscado)) {
+			::system("cls");
+			error = "Entrada invalida. El ID debe ser numerico.";
+			continue;
+		}
+		break;
+	}
+
 	NodoDoble* aux = buscarProveedorInternacionalPorID(lista, idBuscado);
 	if (aux == NULL) {
-		SetConsoleTextAttribute(hConsole, 4);
-		gotoxy(25, 8); cout << "No se encontro el proveedor." << endl;
+		::system("cls");
+		mostrarMensajeInternacional("---- ELIMINAR PROVEEDOR INTERNACIONAL ----", "No se encontro el proveedor.", Color::Red);
 		return;
 	}
+
+	Proveedor eliminado = aux->dato;
 	if (aux == lista.cabeza) {//Si el nodo a eliminar es el primero de la lista
 		lista.cabeza = lista.cabeza->siguiente;//Movemos la cabeza al siguiente nodo
 		if (lista.cabeza != NULL) {
@@ -275,8 +540,26 @@ void eliminarProveedorInternacional(ListaDoble& lista) {
 		aux->siguiente->anterior = aux->anterior;//Actualizamos el puntero anterior del nodo siguiente para saltar el nodo a eliminar
 	}
 	delete aux;
-	gotoxy(25, 8); cout << "\nProveedor internacional eliminado correctamente." << endl;
+
+	::system("cls");
+	Element doc = vbox({
+		text("---- ELIMINAR PROVEEDOR INTERNACIONAL ----") | bold | color(Color::Magenta),
+		separator(),
+		text("Se elimino el siguiente proveedor:"),
+		separator(),
+		text("ID:       " + to_string(eliminado.id)),
+		text("Nombre:   " + eliminado.nombre),
+		text("Tipo:     " + eliminado.tipo),
+		text("Telefono: " + to_string(eliminado.telefono)),
+		text("Contacto: " + eliminado.contacto),
+		}) | border;
+
+	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));
+	Render(pantalla, doc);
+	pantalla.Print();
+	cout << endl;
 }
+
 void liberarListaDoble(ListaDoble& lista) {
 	::system("cls");
 	//Codigo para liberar memoria 
@@ -289,6 +572,5 @@ void liberarListaDoble(ListaDoble& lista) {
 	//Actualizamos los punteros de cabeza y cola a NULL para indicar que la lista esta vacia
 	lista.cabeza = NULL;
 	lista.cola = NULL;
-	gotoxy(25, 5); cout << "Memoria de la lista doble de proveedores internacionales liberada correctamente." << endl;
+	mostrarMensajeInternacional("LISTA DOBLE", "Memoria de la lista doble de proveedores internacionales liberada correctamente.", Color::Blue);
 }
-
