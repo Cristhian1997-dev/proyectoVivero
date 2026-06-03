@@ -42,6 +42,14 @@ static void mostrarMensajePila(const string& titulo, const string& mensaje, Colo
 	cout << endl;
 }
 
+//Funcion para devolver la direccion de memoria del nodo
+string direccionMemoriaPlanta(NodoPlanta* nodo) {
+	stringstream ss;
+	ss << "0x" << hex << reinterpret_cast<uintptr_t>(nodo);
+	string direccion = ss.str();
+	return direccion;
+}
+
 NodoPlanta* buscarPlantaPorId(int id) {
 	NodoPlanta* aux = cima;
 
@@ -175,6 +183,7 @@ void verPlantas() {
 				text("Color: " + aux->dato.color),
 				text("Precio: " + to_string(aux->dato.precio)),
 				text("Cantidad: " + to_string(aux->dato.cantidad)),
+				text("Direccion de memoria: " + direccionMemoriaPlanta(aux)) | dim,
 			}) | border;
 
 			filas.push_back(tarjeta);
@@ -384,6 +393,7 @@ void buscarPlanta() {
 		text("Color: " + aux->dato.color),
 		text("Precio: " + to_string(aux->dato.precio)),
 		text("Cantidad: " + to_string(aux->dato.cantidad)),
+		text("Direccion de memoria: " + direccionMemoriaPlanta(aux)) | dim,
 	}) | border;
 
 	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(documento));
@@ -418,6 +428,7 @@ void eliminarPlanta() {
 		text("Color: " + plantaEliminada.color),
 		text("Precio: " + to_string(plantaEliminada.precio)),
 		text("Cantidad: " + to_string(plantaEliminada.cantidad)),
+		text("Direccion de memoria: " + direccionMemoriaPlanta(aux)) | dim,
 	}) | border;
 
 	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(documento));

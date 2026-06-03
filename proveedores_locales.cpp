@@ -40,6 +40,12 @@ static void mostrarMensajeLocal(const string& titulo,
 	pantalla.Print();
 	cout << endl;
 }
+//Devolver la direccion de memoria del nodo
+string direccionMemoriaProveedorLocal(NodoSimple* nodo) {
+	stringstream ss;
+	ss << "0x" << hex << reinterpret_cast<uintptr_t>(nodo);
+	return ss.str();
+}
 
 NodoSimple* crearNodoProveedorLocal(Proveedor prov) {
 	NodoSimple* nuevo = new NodoSimple;
@@ -277,6 +283,7 @@ void buscarProveedorLocal(NodoSimple* cabeza) {
 		text("Tipo:     " + aux->dato.tipo),
 		text("Telefono: " + to_string(aux->dato.telefono)),
 		text("Contacto: " + aux->dato.contacto),
+		text("Direccion de memoria: " + direccionMemoriaProveedorLocal(aux)) | dim,
 		}) | border;
 
 	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));
@@ -305,6 +312,7 @@ void verProveedoresLocales(NodoSimple*& cabeza) {
 				text("Tipo:     " + aux->dato.tipo),
 				text("Telefono: " + to_string(aux->dato.telefono)),
 				text("Contacto: " + aux->dato.contacto),
+				text("Direccion de memoria: " + direccionMemoriaProveedorLocal(aux)) | dim,
 				}) | border);
 			aux = aux->siguiente;
 		}
@@ -490,6 +498,7 @@ void eliminarProveedorLocal(NodoSimple*& cabeza) {
 		text("Tipo:     " + eliminado.tipo),
 		text("Telefono: " + to_string(eliminado.telefono)),
 		text("Contacto: " + eliminado.contacto),
+		text("Direccion de memoria: " + direccionMemoriaProveedorLocal(aux)) | dim,
 		}) | border;
 
 	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));

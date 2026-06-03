@@ -39,6 +39,13 @@ static void mostrarMensajeInternacional(const string& titulo, const string& mens
 	cout << endl;
 }
 
+//Funcion para devolver la direccion de memoria del nodo
+string direccionMemoriaProveedorInternacional(NodoDoble* nodo) {
+	stringstream ss;
+	ss << "0x" << hex << reinterpret_cast<uintptr_t>(nodo);
+	return ss.str();
+}
+
 NodoDoble* crearNodoProveedorInternacional(const Proveedor& prov) {
 	NodoDoble* nuevo = new NodoDoble();
 	nuevo->dato = prov;
@@ -247,6 +254,7 @@ void verProveedoresInternacionales(ListaDoble& lista) {
 				text("Tipo:     " + aux->dato.tipo),
 				text("Telefono: " + to_string(aux->dato.telefono)),
 				text("Contacto: " + aux->dato.contacto),
+				text("Direccion de memoria: " + direccionMemoriaProveedorInternacional(aux)) | dim,
 				}) | border);
 			aux = aux->siguiente;
 		}
@@ -264,14 +272,14 @@ void verReversaProveedoresInternacionales(ListaDoble& lista) {
 	::system("cls");
 
 	Elements filas;
-	filas.push_back(text("---- PROVEEDORES INTERNACIONALES ----") | bold | color(Color::Magenta));
+	filas.push_back(text("---- PROVEEDORES INTERNACIONALES (REVERSA) ----") | bold | color(Color::Magenta));
 	filas.push_back(separator());
 
 	if (lista.cabeza == NULL) {
 		filas.push_back(text("No hay proveedores internacionales registrados.") | color(Color::Red));
 	}
 	else {
-		NodoDoble* aux = lista.cabeza;//Apuntamos al primer nodo de la lista
+		NodoDoble* aux = lista.cola;//Apuntamos al ultimo nodo de la lista
 		while (aux != NULL) {//Recorremos la lista hasta el final
 			filas.push_back(vbox({
 				text("ID:       " + to_string(aux->dato.id)),
@@ -279,8 +287,9 @@ void verReversaProveedoresInternacionales(ListaDoble& lista) {
 				text("Tipo:     " + aux->dato.tipo),
 				text("Telefono: " + to_string(aux->dato.telefono)),
 				text("Contacto: " + aux->dato.contacto),
+				text("Direccion de memoria: " + direccionMemoriaProveedorInternacional(aux)) | dim,
 				}) | border);
-			aux = aux->siguiente;
+			aux = aux->anterior;
 		}
 	}
 
@@ -459,6 +468,7 @@ void buscarProveedorInternacional(ListaDoble& lista) {
 		text("Tipo:     " + aux->dato.tipo),
 		text("Telefono: " + to_string(aux->dato.telefono)),
 		text("Contacto: " + aux->dato.contacto),
+		text("Direccion de memoria: " + direccionMemoriaProveedorInternacional(aux)) | dim,
 		}) | border;
 
 	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));
@@ -552,6 +562,7 @@ void eliminarProveedorInternacional(ListaDoble& lista) {
 		text("Tipo:     " + eliminado.tipo),
 		text("Telefono: " + to_string(eliminado.telefono)),
 		text("Contacto: " + eliminado.contacto),
+		text("Direccion de memoria: " + direccionMemoriaProveedorInternacional(aux)) | dim,
 		}) | border;
 
 	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));

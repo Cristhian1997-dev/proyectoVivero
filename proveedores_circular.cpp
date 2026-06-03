@@ -40,6 +40,12 @@ static void mostrarMensajeCircular(const string& titulo,
 	pantalla.Print();
 	cout << endl;
 }
+//Funcion para devolver la direccion de memoria
+string direccionMemoriaProveedorCircular(NodoProveedor* nodo) {
+	stringstream ss;
+	ss << "0x" << hex << reinterpret_cast<uintptr_t>(nodo);
+	return ss.str();
+}
 
 void ingresarProveedor() {
 	::system("cls");
@@ -135,6 +141,7 @@ void verProveedores() {
 					text("Nombre:   " + aux->dato.nombre),
 					text("Empresa:  " + aux->dato.empresa),
 					text("Telefono: " + to_string(aux->dato.telefono)),
+					text("Direccion de memoria: " + direccionMemoriaProveedorCircular(aux)) | dim,
 				}) | border);
 			aux = aux->siguiente;
 		} while (aux != inicioCircular); //Se detiene uando da la vuelta
@@ -213,6 +220,7 @@ void buscarProveedor() {
 		text("Nombre:   " + aux->dato.nombre),
 		text("Empresa:  " + aux->dato.empresa),
 		text("Telefono: " + to_string(aux->dato.telefono)),
+		text("Direccion de memoria: " + direccionMemoriaProveedorCircular(aux)) | dim,
 		}) | border;
 
 	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));

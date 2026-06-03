@@ -40,6 +40,12 @@ static void mostrarMensajeCola(const string& titulo,
 	pantalla.Print();
 	cout << endl;
 }
+//Funcion para devolver la direccion de memoria del nodo
+string direccionMemoriaCliente(NodoCliente* nodo) {
+	stringstream ss;
+	ss << "0x" << hex << reinterpret_cast<uintptr_t>(nodo);
+	return ss.str();
+}
 
 NodoCliente* buscarClientePorId(int id) {
 	NodoCliente* aux = cola.frente;
@@ -155,6 +161,7 @@ void verClientes() {
 				text("Nombre:    " + aux->dato.nombre),
 				text("Direccion: " + aux->dato.direccion),
 				text("Telefono:  " + to_string(aux->dato.telefono)),
+				text("Direccion de memoria: " + direccionMemoriaCliente(aux)) | dim,
 				}) | border);
 			aux = aux->siguiente;
 		}
@@ -322,6 +329,7 @@ void buscarCliente() {
 		text("Nombre:    " + aux->dato.nombre),
 		text("Direccion: " + aux->dato.direccion),
 		text("Telefono:  " + to_string(aux->dato.telefono)),
+		text("Direccion de memoria: " + direccionMemoriaCliente(aux)) | dim,
 		}) | border;
 
 	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));
@@ -355,6 +363,7 @@ void eliminarCliente() {
 		text("Nombre:    " + clienteEliminado.nombre),
 		text("Direccion: " + clienteEliminado.direccion),
 		text("Telefono:  " + to_string(clienteEliminado.telefono)),
+		text("Direccion de memoria: " + direccionMemoriaCliente(aux)) | dim,
 		}) | border;
 
 	Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Fit(doc));
